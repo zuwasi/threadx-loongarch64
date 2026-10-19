@@ -1,0 +1,9 @@
+/build*/
+/out/
+*.o
+*.elf
+*.map
+*.bin
+.cache/
+.vscode/
+.idea/
