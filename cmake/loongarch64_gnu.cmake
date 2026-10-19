@@ -44,7 +44,7 @@ execute_process(
 )
 set(LA64_COMMON_FLAGS "-ffreestanding -nostdinc -isystem ${LA64_GCC_INCLUDE_DIR} -fno-common -fno-pic -fno-pie -ffunction-sections -fdata-sections -g")
 
-set(CMAKE_C_FLAGS   "${LA64_ARCH_FLAGS} ${LA64_COMMON_FLAGS}" CACHE INTERNAL "C flags")
+set(CMAKE_C_FLAGS   "-std=c99 ${LA64_ARCH_FLAGS} ${LA64_COMMON_FLAGS}" CACHE INTERNAL "C flags")
 set(CMAKE_ASM_FLAGS "${LA64_ARCH_FLAGS} ${LA64_COMMON_FLAGS} -D__ASSEMBLER__" CACHE INTERNAL "ASM flags")
 set(CMAKE_EXE_LINKER_FLAGS "${LA64_ARCH_FLAGS} -nostdlib -nostartfiles -static -no-pie -Wl,--gc-sections" CACHE INTERNAL "Linker flags")
 

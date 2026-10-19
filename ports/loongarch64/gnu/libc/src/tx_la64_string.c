@@ -11,7 +11,7 @@
     back into calls to the functions being defined.
 
     Requirement: LA-REQ-010  Freestanding runtime support
-    Deviation:   DEV-001     MISRA C:2025 Rule 21.2 (standard library names) */
+    Deviation:   DEV-001     MISRA C:2025 Rule 5.10 (reserved identifiers) */
 
 #include <stdint.h>
 #include <string.h>

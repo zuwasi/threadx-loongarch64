@@ -9,7 +9,7 @@
     freestanding environment (memcpy, memmove, memset, memcmp).
 
     Requirement: LA-REQ-010  Freestanding runtime support
-    Deviation:   DEV-001     MISRA C:2025 Rule 21.2 (standard library names) */
+    Deviation:   DEV-001     MISRA C:2025 Rule 5.10 (reserved identifiers) */
 
 #ifndef TX_LA64_STRING_H
 #define TX_LA64_STRING_H
