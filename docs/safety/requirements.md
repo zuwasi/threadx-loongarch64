@@ -59,5 +59,5 @@ these assumptions:
 
 | Role | Name | Date | Decision |
 |---|---|---|---|
-| Technical lead | To be named (ESL) | | |
+| Technical lead | Osnat Gropper, ESL | | Pending |
 | Safety manager | Daniel Liezrowice, Managing Partner & Founder, ESL | 2026-10-19 | Approved as M2 baseline |

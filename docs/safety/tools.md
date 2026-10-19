@@ -68,5 +68,5 @@ specification, or that failures have been mitigated. Measures:
 
 | Role | Name | Date | Decision |
 |---|---|---|---|
-| Technical lead | To be named (ESL) | | |
+| Technical lead | Osnat Gropper, ESL | | Pending |
 | Safety manager | Daniel Liezrowice, Managing Partner & Founder, ESL | 2026-10-19 | Approved |

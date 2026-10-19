@@ -32,7 +32,7 @@ certification by an assessment body would examine.
 
 | Role | Person | Responsibility |
 |---|---|---|
-| Technical lead | To be named (ESL) | Design, implementation, review of technical content, Advisory deviation approval |
+| Technical lead | Osnat Gropper, ESL | Design, implementation, review of technical content, Advisory deviation approval |
 | Safety manager | Daniel Liezrowice, ESL | Owns this plan; approves Required deviations, verification reports and releases |
 | Verifier | To be appointed per review | Reviews code and tests; must not be the author of the reviewed item |
 
@@ -118,5 +118,5 @@ A change to a released element repeats the affected verification steps.
 
 | Role | Name | Date | Decision |
 |---|---|---|---|
-| Technical lead | To be named (ESL) | | |
+| Technical lead | Osnat Gropper, ESL | | Pending |
 | Safety manager | Daniel Liezrowice, Managing Partner & Founder, ESL | 2026-10-19 | Approved |
