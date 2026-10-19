@@ -32,8 +32,8 @@ certification by an assessment body would examine.
 
 | Role | Person | Responsibility |
 |---|---|---|
-| Technical lead | Daniel Liezrowice, ESL | Design, implementation, review of technical content, Advisory deviation approval |
-| Safety manager | To be appointed (ESL) | Owns this plan; approves Required deviations, verification reports and releases |
+| Technical lead | To be named (ESL) | Design, implementation, review of technical content, Advisory deviation approval |
+| Safety manager | Daniel Liezrowice, ESL | Owns this plan; approves Required deviations, verification reports and releases |
 | Verifier | To be appointed per review | Reviews code and tests; must not be the author of the reviewed item |
 
 IEC 61508-1 Table 5 requires, for SC 3, verification by an independent person
@@ -118,5 +118,5 @@ A change to a released element repeats the affected verification steps.
 
 | Role | Name | Date | Decision |
 |---|---|---|---|
-| Technical lead | Daniel Liezrowice, Managing Partner & Founder, ESL | 2026-10-19 | Approved |
-| Safety manager | Pending | | |
+| Technical lead | To be named (ESL) | | |
+| Safety manager | Daniel Liezrowice, Managing Partner & Founder, ESL | 2026-10-19 | Approved |
