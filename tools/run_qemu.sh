@@ -26,7 +26,7 @@ log="${elf}.log"
 
 timeout --foreground "${timeout_s}" \
     "${qemu}" -M virt -cpu la464 -smp 1 -m 1G -nographic \
-              -monitor none -serial stdio -no-reboot \
+              -monitor none -serial stdio -no-reboot -nic none \
               -kernel "${elf}" > "${log}" 2>&1
 qemu_status=$?
 cat "${log}"
