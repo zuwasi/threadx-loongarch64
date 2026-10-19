@@ -92,6 +92,13 @@ report lists all suppressions with their deviation IDs.
 | Required | Safety manager and technical lead, both required |
 | Advisory | Technical lead |
 
+Approvals are recorded in the deviation record as name, role, date and
+decision. Each approval is confirmed by a cryptographically signed git tag
+(`approval/DEV-nnn-rN`) on the commit that contains the approved record.
+Handwritten signature images are not stored in the repository.
+
+The safety manager and the technical lead must be different people.
+
 ## 6. Compliance reporting
 
 For each baseline the project publishes, in `docs/misra/reports/`:
