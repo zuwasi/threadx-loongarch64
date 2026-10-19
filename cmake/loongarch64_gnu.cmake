@@ -34,7 +34,15 @@ set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
 # -mstrict-align: device registers and early-boot memory must not see
 # unaligned accesses.
 set(LA64_ARCH_FLAGS "-march=loongarch64 -mabi=lp64d -msimd=none -mcmodel=normal -mstrict-align")
-set(LA64_COMMON_FLAGS "-ffreestanding -fno-common -fno-pic -fno-pie -ffunction-sections -fdata-sections -g")
+# -nostdinc: no C library headers at all, only GCC's own freestanding headers
+# (stddef.h, stdint.h, ...) plus the port's libc/include directory. This keeps
+# host or target glibc headers out of the build.
+execute_process(
+    COMMAND ${CMAKE_C_COMPILER} -print-file-name=include
+    OUTPUT_VARIABLE LA64_GCC_INCLUDE_DIR
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+set(LA64_COMMON_FLAGS "-ffreestanding -nostdinc -isystem ${LA64_GCC_INCLUDE_DIR} -fno-common -fno-pic -fno-pie -ffunction-sections -fdata-sections -g")
 
 set(CMAKE_C_FLAGS   "${LA64_ARCH_FLAGS} ${LA64_COMMON_FLAGS}" CACHE INTERNAL "C flags")
 set(CMAKE_ASM_FLAGS "${LA64_ARCH_FLAGS} ${LA64_COMMON_FLAGS} -D__ASSEMBLER__" CACHE INTERNAL "ASM flags")
