@@ -46,7 +46,7 @@ set(LA64_COMMON_FLAGS "-ffreestanding -nostdinc -isystem ${LA64_GCC_INCLUDE_DIR}
 
 set(CMAKE_C_FLAGS   "-std=c99 ${LA64_ARCH_FLAGS} ${LA64_COMMON_FLAGS}" CACHE INTERNAL "C flags")
 set(CMAKE_ASM_FLAGS "${LA64_ARCH_FLAGS} ${LA64_COMMON_FLAGS} -D__ASSEMBLER__" CACHE INTERNAL "ASM flags")
-set(CMAKE_EXE_LINKER_FLAGS "${LA64_ARCH_FLAGS} -nostdlib -nostartfiles -static -no-pie -Wl,--gc-sections" CACHE INTERNAL "Linker flags")
+set(CMAKE_EXE_LINKER_FLAGS "${LA64_ARCH_FLAGS} -nostdlib -nostartfiles -static -no-pie -Wl,--gc-sections -Wl,--build-id=none" CACHE INTERNAL "Linker flags")
 
 set(CMAKE_C_FLAGS_DEBUG     "-O0" CACHE INTERNAL "")
 set(CMAKE_ASM_FLAGS_DEBUG   ""    CACHE INTERNAL "")

@@ -15,6 +15,15 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
 endif()
 
-set(THREADX_CUSTOM_PORT ${CMAKE_CURRENT_LIST_DIR}/ports/loongarch64/gnu)
+enable_testing()
 
+# Warnings for code owned by this project (port, BSP, tests). ThreadX common
+# code keeps its own settings.
+set(LA64_STRICT_WARNINGS -Wall -Wextra -Wconversion -Wsign-conversion -Wshadow -Werror)
+set(LA64_RUN_QEMU ${CMAKE_CURRENT_LIST_DIR}/tools/run_qemu.sh)
+
+set(THREADX_CUSTOM_PORT ${CMAKE_CURRENT_LIST_DIR}/ports/loongarch64/gnu)
 add_subdirectory(external/threadx)
+
+add_subdirectory(bsp/qemu_virt)
+add_subdirectory(test/bringup)

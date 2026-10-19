@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: MIT
 
 set(TX_LA64_PORT_SOURCES
+    ${CMAKE_CURRENT_LIST_DIR}/src/tx_thread_interrupt_control.S
     ${CMAKE_CURRENT_LIST_DIR}/libc/src/tx_la64_string.c
 )
 
