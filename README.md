@@ -24,3 +24,8 @@ ThreadX is included as a submodule pinned to `v6.5.2.202603_rel`.
 sudo apt install gcc-14-loongarch64-linux-gnu binutils-loongarch64-linux-gnu \
                  qemu-system-misc cmake ninja-build
 ```
+
+## License
+
+MIT. Copyright (c) 2026 Engineering Software Lab Israel (ESL).
+See [LICENSE](LICENSE). Eclipse ThreadX is licensed separately (MIT).
