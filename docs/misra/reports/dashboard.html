@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MISRA C:2025 Dashboard - ThreadX LoongArch64 Port</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{--navy:#0b1f3a;--navy2:#132d52;--bg:#eef2f7;--card:#fff;--ink:#1c2738;--mute:#6b7a90;--line:#dde3ec;
+--green:#1f9d55;--amber:#e8a317;--red:#d64545;--blue:#2f6fd6;--teal:#14a3b8;--violet:#7a5ad6}
+*{box-sizing:border-box}body{margin:0;font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:linear-gradient(90deg,var(--navy),var(--navy2));color:#fff;padding:18px 28px;display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:14px}.logo{width:40px;height:40px;border-radius:9px;background:linear-gradient(135deg,#2f6fd6,#14a3b8);display:grid;place-items:center;font-weight:700}
+h1{font-size:20px;margin:0}.sub{font-size:13px;opacity:.75;margin-top:2px}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600}
+.meta{text-align:right;font-size:12px;opacity:.85;line-height:1.6}
+nav{background:#fff;border-bottom:1px solid var(--line);padding:0 28px;display:flex;gap:26px;font-size:13px}
+nav span{padding:11px 0;color:var(--mute)}nav span.on{color:var(--blue);border-bottom:2px solid var(--blue);font-weight:600}
+main{padding:22px 28px;display:grid;grid-template-columns:repeat(12,1fr);gap:18px;max-width:1600px;margin:auto}
+.card{background:var(--card);border-radius:12px;box-shadow:0 1px 3px rgba(16,32,64,.08);padding:16px 18px;border:1px solid #e6ebf2}
+.card h2{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute);margin:0 0 12px;font-weight:600;display:flex;justify-content:space-between}
+.s3{grid-column:span 3}.s4{grid-column:span 4}.s5{grid-column:span 5}.s6{grid-column:span 6}.s7{grid-column:span 7}.s8{grid-column:span 8}.s12{grid-column:span 12}.s2{grid-column:span 2}
+.kpi .v{font-size:34px;font-weight:700;line-height:1.1}.kpi .l{font-size:12px;color:var(--mute);margin-top:4px}
+.kpi .d{font-size:12px;margin-top:8px;font-weight:600}
+.up{color:var(--green)}.warn{color:var(--amber)}.bad{color:var(--red)}
+table{width:100%;border-collapse:collapse;font-size:13px}th{text-align:left;color:var(--mute);font-weight:600;font-size:11px;text-transform:uppercase;padding:6px 8px;border-bottom:1px solid var(--line)}
+td{padding:7px 8px;border-bottom:1px solid #f0f3f7;vertical-align:top}
+.pill{padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;white-space:nowrap}
+.p-req{background:#fde8e8;color:#b23535}.p-adv{background:#fff4dc;color:#9a6b00}.p-man{background:#efe8fd;color:#5b3bb5}
+.p-ok{background:#e3f6ec;color:#16794a}.p-pend{background:#fff4dc;color:#9a6b00}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--mute);flex-wrap:wrap;margin-top:6px}.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.steps{display:flex;gap:0;align-items:stretch}.step{flex:1;position:relative;padding:12px 12px 12px 18px;background:#f5f8fc;margin-right:6px;border-radius:8px}
+.step .n{width:24px;height:24px;border-radius:50%;background:var(--green);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;margin-bottom:6px}
+.step.cur .n{background:var(--amber)}.step b{font-size:13px}.step p{font-size:12px;color:var(--mute);margin:4px 0 0}
+.bar{height:9px;border-radius:5px;background:#edf1f6;overflow:hidden;display:flex}.bar>span{display:block;height:100%}
+.row{display:flex;justify-content:space-between;font-size:12px;margin:10px 0 4px}
+.gauge-wrap{display:flex;align-items:center;gap:18px}
+.note{font-size:11.5px;color:var(--mute);margin-top:10px;line-height:1.5}
+svg text{font-family:inherit}
+@media(max-width:1100px){.s3,.s4,.s5,.s6,.s7,.s8,.s2{grid-column:span 12}.steps{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><div class="logo">ESL</div>
+    <div><h1 id="proj"></h1><div class="sub">Static analysis compliance dashboard &middot; <span id="std"></span> &middot; MISRA Compliance:2020</div></div>
+  </div>
+  <div class="meta" id="meta"></div>
+</header>
+<nav><span class="on">Compliance overview</span><span>Violations explorer</span><span>Deviations</span><span>Trends</span><span>Test results</span></nav>
+<main id="main"></main>
+<script>
+const D = {"project": "ThreadX LoongArch64 Port", "standard": "MISRA C:2025", "scans": [{"label": "Scan 1", "title": "Baseline", "date": "2026-10-20", "note": "First analysis. Port, BSP, kernel and ESL test code in one scope.", "port": 121, "bsp": 22, "kernel": 614, "esl_tests": 32}, {"label": "Scan 2", "title": "Port/BSP remediation", "date": "2026-10-20", "note": "Product scope. Code fixes plus DEV-002..DEV-013 suppressions.", "port": 0, "bsp": 0, "kernel": 613, "esl_tests": null}, {"label": "Scan 3", "title": "Re-scan on final sources", "date": "2026-10-20", "note": "_tx_version_id restored for the regression suite; no new findings.", "port": 0, "bsp": 0, "kernel": 613, "esl_tests": null}, {"label": "Scan 4", "title": "Release candidate", "date": "2026-10-20", "note": "PR-M5-001 scheduler fix, DEV-014, test-code cleanup.", "port": 0, "bsp": 0, "kernel": 613, "esl_tests": 0}], "tests_scope": [{"label": "Tests scan 1", "port_bsp": 5, "bringup_demo": 23, "harness_libc": 95, "upstream": 8576, "total": 8699}, {"label": "Tests scan 2", "port_bsp": 0, "bringup_demo": 0, "harness_libc": 90, "upstream": 8575, "total": 8665}], "quality": {"regression": {"passed": 576, "total": 576, "configs": 6}, "root_tests": {"passed": 3, "total": 3}, "stress": {"passed": 600, "total": 600, "before": "369/600 before PR-M5-001 fix"}, "tool_validation": {"passed": 8, "total": 8}}, "process": [{"title": "Plan", "text": "GEP, GRP (219 guidelines), deviation process"}, {"title": "Tool setup", "text": "LoongArch compiler definition, project test configuration"}, {"title": "Baseline scan", "text": "789 findings, 143 in port + BSP"}, {"title": "Remediate", "text": "Code fixes first; deviations only where code cannot change"}, {"title": "Deviate", "text": "14 records with risk analysis and compensating measures"}, {"title": "Verify", "text": "Re-scan, 576/576 regression, tool validation 8/8"}, {"title": "Approve", "text": "Tech Lead / Safety Manager sign-off, signed git tags"}], "generated": "2026-10-21", "tool": "Parasoft C/C++test Standard 2026.1.3", "compiler": "GCC 14.2.0 loongarch64-linux-gnu", "guidelines_total": 219, "guidelines_active": 218, "disapplied": 1, "deviated_guidelines": ["Dir 4.1", "Dir 4.6", "Dir 4.9", "Rule 1.1", "Rule 11.4", "Rule 11.5", "Rule 2.3", "Rule 2.8", "Rule 20.5", "Rule 5.10", "Rule 8.6", "Rule 8.7"], "in_scope_findings": 0, "product_total": 613, "tests_total": 8665, "kernel_total": 613, "kernel_violated": 19, "port_cat": {"Mandatory": {"total": 22, "deviated": 0, "violated": 0}, "Required": {"total": 151, "deviated": 5, "violated": 0}, "Advisory": {"total": 45, "deviated": 7, "violated": 0}}, "kern_cat": {"Mandatory": {"total": 22, "violated": 0}, "Required": {"total": 151, "violated": 12}, "Advisory": {"total": 45, "violated": 7}}, "top_rules": [{"guideline": "Rule 5.10", "count": 229, "category": "Required", "title": "A reserved identifier or reserved macro name shall not be declared"}, {"guideline": "Rule 8.13", "count": 113, "category": "Advisory", "title": "A pointer should point to a const-qualified type whenever possible"}, {"guideline": "Rule 13.3", "count": 105, "category": "Advisory", "title": "A full expression containing an increment (++) or decrement (--) operator should have no other potential side effects other than that caused by the increment or decrement operator"}, {"guideline": "Dir 4.4", "count": 40, "category": "Advisory", "title": "Sections of code should not be \"commented out\""}, {"guideline": "Dir 4.1", "count": 25, "category": "Required", "title": "Run-time failures shall be minimized"}, {"guideline": "Rule 1.1", "count": 24, "category": "Required", "title": "The program shall contain no violations of the standard C syntax and constraints, and shall not exceed the implementation's translation limits"}, {"guideline": "Rule 18.3", "count": 16, "category": "Required", "title": "The relational operators >, >=, < and <= shall not be applied to expressions of pointer type except where they point into the same object"}, {"guideline": "Rule 14.3", "count": 15, "category": "Required", "title": "Controlling expressions shall not be invariant"}, {"guideline": "Rule 10.3", "count": 9, "category": "Required", "title": "The value of an expression shall not be assigned to an object with a narrower essential type or of a different essential type category"}, {"guideline": "Rule 18.2", "count": 8, "category": "Required", "title": "Subtraction between pointers shall only be applied to pointers that address elements of the same array"}], "top_files": [{"file": "tx_misra.c", "count": 40}, {"file": "tx_timer_initialize.c", "count": 23}, {"file": "tx_thread_initialize.c", "count": 20}, {"file": "tx_thread_performance_system_info_get.c", "count": 14}, {"file": "tx_mutex_performance_system_info_get.c", "count": 13}, {"file": "tx_timer_deactivate.c", "count": 13}, {"file": "tx_timer_info_get.c", "count": 13}, {"file": "txe_thread_create.c", "count": 13}], "devs": [{"id": "DEV-001", "title": "Freestanding memory functions use standard library names", "guideline": "Rule 5.10", "covered": ["Rule 5.10"], "required": true, "status": "Conditionally approved by safety manager; technical lead approval pending (see section 5)"}, {"id": "DEV-002", "title": "ThreadX internal identifiers use the reserved `_tx_` prefix", "guideline": "Rule 5.10", "covered": ["Rule 5.10"], "required": true, "status": "Draft (approval pending)"}, {"id": "DEV-003", "title": "ThreadX API basic types use the names fixed by `tx_api.h`", "guideline": "Dir 4.6", "covered": ["Dir 4.6"], "required": false, "status": "Draft (approval pending)"}, {"id": "DEV-004", "title": "ThreadX extension hooks are function-like macros", "guideline": "Dir 4.9", "covered": ["Dir 4.9"], "required": false, "status": "Draft (approval pending)"}, {"id": "DEV-005", "title": "ThreadX-mandated identifiers exceed the C90/C99 translation limits", "guideline": "Rule 1.1", "covered": ["Rule 1.1"], "required": true, "status": "Draft (approval pending)"}, {"id": "DEV-006", "title": "Functions implemented in assembly have no C definition", "guideline": "Rule 8.6", "covered": ["Rule 8.6"], "required": true, "status": "Draft (approval pending)"}, {"id": "DEV-007", "title": "MMIO device addresses are converted from integer constants", "guideline": "Rule 11.4", "covered": ["Rule 11.4"], "required": true, "status": "Draft (approval pending)"}, {"id": "DEV-008", "title": "ISO C signatures use `int` for `memset` and `memcmp`", "guideline": "Dir 4.6", "covered": ["Dir 4.6"], "required": false, "status": "Draft (approval pending)"}, {"id": "DEV-009", "title": "Memory functions convert `void *` parameters to object pointers", "guideline": "Rule 11.5", "covered": ["Rule 11.5"], "required": false, "status": "Draft (approval pending)"}, {"id": "DEV-010", "title": "Compile-time checks use the unused-typedef static assertion idiom", "guideline": "Rule 2.3", "covered": ["Rule 2.3"], "required": false, "status": "Draft (approval pending)"}, {"id": "DEV-011", "title": "BSP API functions are referenced outside the compliance scan scope", "guideline": "Rule 8.7", "covered": ["Rule 8.7"], "required": false, "status": "Draft (approval pending)"}, {"id": "DEV-012", "title": "Stack checking forces stack filling with `#undef`", "guideline": "Rule 20.5", "covered": ["Rule 20.5"], "required": false, "status": "Draft (approval pending)"}, {"id": "DEV-013", "title": "ThreadX version ID declared without a product-scope definition", "guideline": "Rule 2.8, Rule 8.6", "covered": ["Rule 2.8", "Rule 8.6"], "required": true, "status": "Draft (approval pending)"}, {"id": "DEV-014", "title": "Flow analysis flags the memset destination as possibly null", "guideline": "Dir 4.1", "covered": ["Dir 4.1"], "required": true, "status": "Draft (approval pending)"}]};
+const $ = (h) => { const t = document.createElement('template'); t.innerHTML = h.trim(); return t.content.firstChild; };
+const main = document.getElementById('main');
+document.getElementById('proj').textContent = D.project;
+document.getElementById('std').textContent = D.standard;
+document.getElementById('meta').innerHTML = D.tool + '<br>' + D.compiler + '<br>Updated ' + D.generated;
+const add = (cls, title, body, right) => { const c = $(`<section class="card ${cls}"><h2><span>${title}</span><span>${right||''}</span></h2></section>`); if (typeof body === 'string') c.insertAdjacentHTML('beforeend', body); else c.appendChild(body); main.appendChild(c); return c; };
+const fmt = (n) => n.toLocaleString('en-US');
+
+/* ---------- KPIs ---------- */
+const first = D.scans[0], last = D.scans[D.scans.length - 1];
+const eslFirst = first.port + first.bsp, eslNow = last.port + last.bsp;
+const act = D.guidelines_active, dev = D.deviated_guidelines.length;
+const kern = act - D.kernel_violated;
+const pend = D.devs.filter(d => !/^Approved/i.test(d.status)).length;
+const kpi = (cls, v, l, d, dc) => add('s2 kpi', cls, `<div class="v">${v}</div><div class="l">${l}</div><div class="d ${dc}">${d}</div>`);
+kpi('Port + BSP violations', eslNow, 'unsuppressed findings in ESL code', `&#9660; ${eslFirst} &rarr; ${eslNow} (-100%)`, 'up');
+kpi('Guideline compliance', ((act - D.in_scope_findings) / act * 100).toFixed(0) + '%', `${act} of ${act} guidelines, port + BSP`, `${((act-dev)/act*100).toFixed(1)}% without deviation`, 'up');
+kpi('Kernel compliance', (kern / act * 100).toFixed(1) + '%', `${kern} of ${act} guidelines, upstream`, `${D.kernel_violated} guidelines / ${fmt(D.kernel_total)} findings`, 'warn');
+kpi('Deviations', D.devs.length, `records covering ${dev} guidelines`, `${pend} awaiting approval`, 'warn');
+kpi('Regression tests', `${D.quality.regression.passed}/${D.quality.regression.total}`, `${D.quality.regression.configs} configs on QEMU`, `stress ${D.quality.stress.passed}/${D.quality.stress.total}`, 'up');
+kpi('Tool validation', `${D.quality.tool_validation.passed}/${D.quality.tool_validation.total}`, 'seeded violations detected', 'Parasoft T2 confidence', 'up');
+
+/* ---------- SVG helpers ---------- */
+const NS = 'http://www.w3.org/2000/svg';
+const svg = (w, h) => { const s = document.createElementNS(NS, 'svg'); s.setAttribute('viewBox', `0 0 ${w} ${h}`); s.setAttribute('width', '100%'); return s; };
+const el = (p, tag, a, txt) => { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); if (txt !== undefined) e.textContent = txt; p.appendChild(e); return e; };
+
+function lineChart(labels, series, opts) {
+  const W = 760, H = 270, L = 70, Rr = 70, T = 18, B = 46;
+  const s = svg(W, H), max = opts.max || Math.max(...series.flatMap(x => x.data.filter(v => v != null)));
+  const top = Math.ceil(max * 1.12 / 50) * 50;
+  const x = i => L + (W - L - Rr) * (labels.length === 1 ? .5 : i / (labels.length - 1));
+  const y = v => T + (H - T - B) * (1 - v / top);
+  for (let k = 0; k <= 5; k++) { const v = top * k / 5; el(s, 'line', {x1: L, x2: W - Rr, y1: y(v), y2: y(v), stroke: '#edf1f6'}); el(s, 'text', {x: L - 8, y: y(v) + 4, 'text-anchor': 'end', 'font-size': 11, fill: '#8a97ab'}, Math.round(v)); }
+  labels.forEach((lb, i) => { el(s, 'text', {x: x(i), y: H - 26, 'text-anchor': 'middle', 'font-size': 12, fill: '#1c2738', 'font-weight': 600}, lb[0]); el(s, 'text', {x: x(i), y: H - 10, 'text-anchor': 'middle', 'font-size': 10.5, fill: '#8a97ab'}, lb[1]); });
+  series.forEach(se => {
+    const pts = se.data.map((v, i) => v == null ? null : [x(i), y(v)]).filter(Boolean);
+    if (se.area) { const d = `M${pts[0][0]},${y(0)} ` + pts.map(p => `L${p[0]},${p[1]}`).join(' ') + ` L${pts[pts.length-1][0]},${y(0)} Z`; el(s, 'path', {d, fill: se.color, opacity: .12}); }
+    el(s, 'path', {d: 'M' + pts.map(p => p.join(',')).join(' L'), fill: 'none', stroke: se.color, 'stroke-width': 3, 'stroke-linejoin': 'round', 'stroke-dasharray': se.dash || ''});
+    se.data.forEach((v, i) => { if (v == null) return; el(s, 'circle', {cx: x(i), cy: y(v), r: 5, fill: '#fff', stroke: se.color, 'stroke-width': 2.5});
+      if (se.label === false || (v === 0 && !se.area)) return; el(s, 'text', {x: x(i) + (se.dx || 0), y: y(v) + (se.dy || -11), 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 700, fill: se.color}, fmt(v)); });
+  });
+  return s;
+}
+
+function donut(parts, center, sub) {
+  const s = svg(200, 200), R = 78, C = 2 * Math.PI * R; let off = 0; const tot = parts.reduce((a, p) => a + p.v, 0);
+  el(s, 'circle', {cx: 100, cy: 100, r: R, fill: 'none', stroke: '#edf1f6', 'stroke-width': 24});
+  parts.forEach(p => { const len = C * p.v / tot; el(s, 'circle', {cx: 100, cy: 100, r: R, fill: 'none', stroke: p.c, 'stroke-width': 24, 'stroke-dasharray': `${len} ${C - len}`, 'stroke-dashoffset': -off, transform: 'rotate(-90 100 100)'}); off += len; });
+  el(s, 'text', {x: 100, y: 102, 'text-anchor': 'middle', 'font-size': 30, 'font-weight': 700, fill: '#1c2738'}, center);
+  el(s, 'text', {x: 100, y: 124, 'text-anchor': 'middle', 'font-size': 11, fill: '#6b7a90'}, sub);
+  return s;
+}
+
+function stackBars(rows, keys) {
+  const W = 760, H = 250, L = 48, T = 14, B = 34, bw = 70; const s = svg(W, H);
+  const max = Math.max(...rows.map(r => keys.reduce((a, k) => a + (r[k.k] || 0), 0))); const top = Math.ceil(max * 1.1 / 100) * 100;
+  const y = v => T + (H - T - B) * (1 - v / top); const step = (W - L - 20) / rows.length;
+  for (let k = 0; k <= 4; k++) { const v = top * k / 4; el(s, 'line', {x1: L, x2: W - 20, y1: y(v), y2: y(v), stroke: '#edf1f6'}); el(s, 'text', {x: L - 8, y: y(v) + 4, 'text-anchor': 'end', 'font-size': 11, fill: '#8a97ab'}, Math.round(v)); }
+  rows.forEach((r, i) => { let acc = 0; const cx = L + step * i + step / 2;
+    keys.forEach(k => { const v = r[k.k] || 0; if (!v) return; el(s, 'rect', {x: cx - bw / 2, y: y(acc + v), width: bw, height: y(acc) - y(acc + v), fill: k.c, rx: 2}); acc += v; });
+    el(s, 'text', {x: cx, y: y(acc) - 6, 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 700, fill: '#1c2738'}, fmt(acc));
+    el(s, 'text', {x: cx, y: H - 12, 'text-anchor': 'middle', 'font-size': 12, fill: '#1c2738', 'font-weight': 600}, r.label); });
+  return s;
+}
+
+/* ---------- Trend: ESL code ---------- */
+const labels = D.scans.map(s => [s.label, s.title]);
+const tr = add('s8', 'Violation trend &mdash; ESL code (port + BSP)', lineChart(labels, [
+  {data: D.scans.map(s => s.port + s.bsp), color: '#2f6fd6', area: true},
+  {data: D.scans.map(s => s.port), color: '#14a3b8', dash: '6 5', dx: 24, dy: 16},
+  {data: D.scans.map(s => s.bsp), color: '#7a5ad6', dash: '2 5', dx: 22, dy: 18}
+], {}), `<span class="badge" style="background:#e3f6ec;color:#16794a">&#9660; ${eslFirst} &rarr; ${eslNow}</span>`);
+tr.insertAdjacentHTML('beforeend', `<div class="legend"><span><i style="background:#2f6fd6"></i>Port + BSP total</span><span><i style="background:#14a3b8"></i>Port</span><span><i style="background:#7a5ad6"></i>BSP</span></div>`);
+
+/* ---------- Donut: guideline status ---------- */
+const comp = act - dev;
+const dn = add('s4', 'Guideline status &mdash; port + BSP', '');
+const wrap = $('<div class="gauge-wrap"></div>');
+const dsv = donut([{v: comp, c: '#1f9d55'}, {v: dev, c: '#e8a317'}, {v: D.disapplied, c: '#b7c2d2'}], '100%', 'compliant');
+dsv.setAttribute('width', '190'); wrap.appendChild(dsv);
+wrap.insertAdjacentHTML('beforeend', `<div style="font-size:13px;line-height:2">
+ <div><i style="display:inline-block;width:10px;height:10px;background:#1f9d55;border-radius:2px;margin-right:6px"></i><b>${comp}</b> compliant</div>
+ <div><i style="display:inline-block;width:10px;height:10px;background:#e8a317;border-radius:2px;margin-right:6px"></i><b>${dev}</b> compliant with deviation</div>
+ <div><i style="display:inline-block;width:10px;height:10px;background:#b7c2d2;border-radius:2px;margin-right:6px"></i><b>${D.disapplied}</b> disapplied</div>
+ <div><i style="display:inline-block;width:10px;height:10px;background:#d64545;border-radius:2px;margin-right:6px"></i><b>0</b> violated</div></div>`);
+dn.appendChild(wrap);
+dn.insertAdjacentHTML('beforeend', `<div class="note">${D.guidelines_total} guidelines in the GRP. The claim becomes final when the deviation records are approved.</div>`);
+
+/* ---------- Stacked bars: all components per scan ---------- */
+const sb = add('s8', 'Findings per scan by component (product analysis)', stackBars(D.scans.map(s => ({label: s.label, kernel: s.kernel, port: s.port, bsp: s.bsp, esl: s.esl_tests || 0})),
+  [{k: 'kernel', c: '#9fb3cf'}, {k: 'port', c: '#2f6fd6'}, {k: 'bsp', c: '#7a5ad6'}, {k: 'esl', c: '#14a3b8'}]));
+sb.insertAdjacentHTML('beforeend', `<div class="legend"><span><i style="background:#9fb3cf"></i>Upstream kernel (M7 gap analysis)</span><span><i style="background:#2f6fd6"></i>Port</span><span><i style="background:#7a5ad6"></i>BSP</span><span><i style="background:#14a3b8"></i>ESL test code (Scan 1 only in this scope)</span></div>`);
+
+/* ---------- Compliance by category ---------- */
+const catBox = add('s4', 'Compliance by MISRA category', '');
+const pillCls = {Mandatory: 'p-man', Required: 'p-req', Advisory: 'p-adv'};
+['Mandatory', 'Required', 'Advisory'].forEach(c => {
+  const p = D.port_cat[c], k = D.kern_cat[c];
+  const pc = p.total - p.deviated, kc = k.total - k.violated;
+  catBox.insertAdjacentHTML('beforeend', `<div class="row"><span><span class="pill ${pillCls[c]}">${c}</span> &nbsp;${p.total} guidelines</span><span></span></div>
+   <div class="row" style="margin:4px 0 3px;color:#6b7a90"><span>Port + BSP</span><b style="color:#1f9d55">100%</b></div>
+   <div class="bar"><span style="width:${pc/p.total*100}%;background:#1f9d55"></span><span style="width:${p.deviated/p.total*100}%;background:#e8a317"></span></div>
+   <div class="row" style="margin:7px 0 3px;color:#6b7a90"><span>Upstream kernel</span><b style="color:${k.violated?'#e8a317':'#1f9d55'}">${(kc/k.total*100).toFixed(1)}%</b></div>
+   <div class="bar"><span style="width:${kc/k.total*100}%;background:#9fb3cf"></span><span style="width:${k.violated/k.total*100}%;background:#d64545"></span></div>`);
+});
+catBox.insertAdjacentHTML('beforeend', `<div class="legend"><span><i style="background:#1f9d55"></i>Compliant</span><span><i style="background:#e8a317"></i>With deviation</span><span><i style="background:#d64545"></i>Violated</span></div>`);
+
+/* ---------- Process ---------- */
+const pr = add('s12', 'Compliance process', '');
+const st = $('<div class="steps"></div>');
+D.process.forEach((p, i) => st.insertAdjacentHTML('beforeend', `<div class="step ${i === D.process.length - 1 ? 'cur' : ''}"><div class="n">${i === D.process.length - 1 ? '&hellip;' : '&#10003;'}</div><b>${p.title}</b><p>${p.text}</p></div>`));
+pr.appendChild(st);
+
+/* ---------- Tests scope ---------- */
+const ts = D.tests_scope;
+add('s4', 'Test-harness scope (reported separately)', `<table><tr><th>Component</th><th>Before</th><th>Now</th></tr>
+ <tr><td>Port (TX_REGRESSION_TEST code) + BSP</td><td>${ts[0].port_bsp}</td><td class="up"><b>${ts[1].port_bsp}</b></td></tr>
+ <tr><td>Bring-up and demo tests</td><td>${ts[0].bringup_demo}</td><td class="up"><b>${ts[1].bringup_demo}</b></td></tr>
+ <tr><td>Regression harness libc</td><td>${ts[0].harness_libc}</td><td class="warn"><b>${ts[1].harness_libc}</b></td></tr>
+ <tr><td>Upstream tests + kernel (Debug)</td><td>${fmt(ts[0].upstream)}</td><td>${fmt(ts[1].upstream)}</td></tr>
+ <tr><td><b>Total</b></td><td><b>${fmt(ts[0].total)}</b></td><td><b>${fmt(ts[1].total)}</b></td></tr></table>
+ <div class="note">The harness libc implements printf/puts/time/rand for the upstream suite under their standard names. It never ships, so its findings are recorded, not deviated.</div>`);
+
+/* ---------- Top kernel rules ---------- */
+const maxR = Math.max(...D.top_rules.map(r => r.count));
+add('s4', 'Top violated guidelines &mdash; upstream kernel', `<table>${D.top_rules.map(r => `<tr><td style="width:84px"><b>${r.guideline}</b><br><span class="pill ${pillCls[r.category]||''}">${r.category}</span></td>
+ <td><div style="font-size:11.5px;color:#6b7a90;margin-bottom:4px">${r.title.slice(0, 80)}${r.title.length > 80 ? '&hellip;' : ''}</div><div class="bar"><span style="width:${r.count/maxR*100}%;background:#9fb3cf"></span></div></td>
+ <td style="width:40px;text-align:right"><b>${r.count}</b></td></tr>`).join('')}</table>`, `${D.kernel_violated} guidelines`);
+
+/* ---------- Quality gates ---------- */
+const q = D.quality;
+const gate = (n, v, ok, sub) => `<tr><td>${n}<div style="font-size:11px;color:#6b7a90">${sub||''}</div></td><td style="text-align:right"><b>${v}</b></td><td style="width:70px"><span class="pill ${ok?'p-ok':'p-pend'}">${ok?'PASS':'OPEN'}</span></td></tr>`;
+add('s4', 'Quality gates', `<table>
+ ${gate('No unsuppressed port/BSP findings', D.in_scope_findings, D.in_scope_findings === 0, 'product scope, Release build')}
+ ${gate('Regression suite', `${q.regression.passed}/${q.regression.total}`, true, `${q.regression.configs} ThreadX configurations`)}
+ ${gate('Parallel stress', `${q.stress.passed}/${q.stress.total}`, true, q.stress.before)}
+ ${gate('Root bring-up and demo tests', `${q.root_tests.passed}/${q.root_tests.total}`, true, 'Debug and Release')}
+ ${gate('Tool validation (seeded)', `${q.tool_validation.passed}/${q.tool_validation.total}`, true, 'Parasoft C/C++test, T2')}
+ ${gate('Freestanding libc check', 'nm -u empty', true, 'DEV-001 condition 3, in CI')}
+ ${gate('Deviation approvals', `${D.devs.length - pend}/${D.devs.length}`, pend === 0, 'Tech Lead / Safety Manager')}
+</table>`);
+
+/* ---------- Deviations ---------- */
+add('s12', 'Deviation records', `<table><tr><th>ID</th><th>Guideline</th><th>Subject</th><th>Approval needed</th><th>Status</th></tr>
+ ${D.devs.map(d => `<tr><td><b>${d.id}</b></td><td>${d.guideline}</td><td>${d.title}</td><td>${d.required ? 'Tech Lead + Safety Manager' : 'Tech Lead'}</td>
+ <td><span class="pill ${/^Approved/i.test(d.status) ? 'p-ok' : 'p-pend'}">${d.status.replace(/\(see.*\)/, '').slice(0, 60)}</span></td></tr>`).join('')}</table>`);
+
+main.insertAdjacentHTML('beforeend', `<div class="s12 note" style="text-align:center">Generated by tools/parasoft/dashboard.py from the Parasoft SARIF reports, docs/misra/grp.md and docs/misra/deviations/. Scan history: docs/misra/reports/history.json. No certification claim.</div>`);
+</script>
+</body>
+</html>
+

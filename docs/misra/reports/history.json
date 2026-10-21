@@ -1,0 +1,37 @@
+{
+  "project": "ThreadX LoongArch64 Port",
+  "standard": "MISRA C:2025",
+  "scans": [
+    {"label": "Scan 1", "title": "Baseline", "date": "2026-10-20",
+     "note": "First analysis. Port, BSP, kernel and ESL test code in one scope.",
+     "port": 121, "bsp": 22, "kernel": 614, "esl_tests": 32},
+    {"label": "Scan 2", "title": "Port/BSP remediation", "date": "2026-10-20",
+     "note": "Product scope. Code fixes plus DEV-002..DEV-013 suppressions.",
+     "port": 0, "bsp": 0, "kernel": 613, "esl_tests": null},
+    {"label": "Scan 3", "title": "Re-scan on final sources", "date": "2026-10-20",
+     "note": "_tx_version_id restored for the regression suite; no new findings.",
+     "port": 0, "bsp": 0, "kernel": 613, "esl_tests": null},
+    {"label": "Scan 4", "title": "Release candidate", "date": "2026-10-20",
+     "note": "PR-M5-001 scheduler fix, DEV-014, test-code cleanup.",
+     "port": 0, "bsp": 0, "kernel": 613, "esl_tests": 0}
+  ],
+  "tests_scope": [
+    {"label": "Tests scan 1", "port_bsp": 5, "bringup_demo": 23, "harness_libc": 95, "upstream": 8576, "total": 8699},
+    {"label": "Tests scan 2", "port_bsp": 0, "bringup_demo": 0, "harness_libc": 90, "upstream": 8575, "total": 8665}
+  ],
+  "quality": {
+    "regression": {"passed": 576, "total": 576, "configs": 6},
+    "root_tests": {"passed": 3, "total": 3},
+    "stress": {"passed": 600, "total": 600, "before": "369/600 before PR-M5-001 fix"},
+    "tool_validation": {"passed": 8, "total": 8}
+  },
+  "process": [
+    {"title": "Plan", "text": "GEP, GRP (219 guidelines), deviation process"},
+    {"title": "Tool setup", "text": "LoongArch compiler definition, project test configuration"},
+    {"title": "Baseline scan", "text": "789 findings, 143 in port + BSP"},
+    {"title": "Remediate", "text": "Code fixes first; deviations only where code cannot change"},
+    {"title": "Deviate", "text": "14 records with risk analysis and compensating measures"},
+    {"title": "Verify", "text": "Re-scan, 576/576 regression, tool validation 8/8"},
+    {"title": "Approve", "text": "Tech Lead / Safety Manager sign-off, signed git tags"}
+  ]
+}
