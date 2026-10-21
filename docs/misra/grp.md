@@ -34,7 +34,8 @@ The "Checkers" column lists the Parasoft checker suffixes, for example `a`
 means `MISRAC2025-RULE_x_y-a`.
 
 | Guideline | MISRA category | Project category | Checkers | Title |
-|---|---|---|---|---|| Dir 4.1 | Required | Required | a, b, c, d, e, g, h, i, j, k, l, m | Run-time failures shall be minimized |
+|---|---|---|---|---|
+| Dir 4.1 | Required | Required | a, b, c, d, e, g, h, i, j, k, l, m | Run-time failures shall be minimized |
 | Dir 4.2 | Advisory | Advisory | a | All usage of assembly language should be documented |
 | Dir 4.3 | Required | Required | a | Assembly language shall be encapsulated and isolated |
 | Dir 4.4 | Advisory | Advisory | a, b | Sections of code should not be "commented out" |

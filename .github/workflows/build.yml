@@ -27,5 +27,30 @@ jobs:
       - name: Build (${{ matrix.build_type }})
         run: tools/build.sh ${{ matrix.build_type }}
 
+      - name: Freestanding libc check (DEV-001)
+        run: tools/check_freestanding_libc.sh build/$(echo ${{ matrix.build_type }} | tr A-Z a-z)
+
       - name: Test on QEMU (${{ matrix.build_type }})
         run: ctest --test-dir build/$(echo ${{ matrix.build_type }} | tr A-Z a-z) --output-on-failure
+
+  regression:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [default, optimized, disable_notify_callbacks, stack_checking,
+                 stack_checking_rand_fill, trace]
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: true
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            gcc-14-loongarch64-linux-gnu binutils-loongarch64-linux-gnu \
+            qemu-system-misc cmake ninja-build
+
+      - name: Regression (${{ matrix.config }})
+        run: tools/regression.sh ${{ matrix.config }}

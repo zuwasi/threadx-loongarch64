@@ -4,7 +4,7 @@
 |---|---|
 | Document ID | ESL-TXLA64-TCQ |
 | Standard | IEC 61508-3:2010, 7.4.4 |
-| Revision | r1, 2026-10-19 |
+| Revision | r2, 2026-10-20 (Parasoft validation results, section 3.2) |
 
 ## 1. Classes
 
@@ -49,13 +49,26 @@ specification, or that failures have been mitigated. Measures:
 
 1. Vendor qualification kit (TÜV certificate for C/C++test) to be referenced
    for the assessment.
-2. **Known-violation samples.** A set of files with seeded MISRA violations is
-   analysed with the project configuration; every seeded violation must be
-   reported. Kept in `test/tool_validation/parasoft/`.
+2. **Known-violation samples.** `test/tool_validation/parasoft/seeded_violations.c`
+   seeds one violation each of Rules 2.3, 8.4, 8.13, 10.2, 10.8, 11.4, 17.7
+   and 18.4. `tools/parasoft/validate.sh` analyses it with the project
+   configuration; every seeded violation must be reported. Result
+   (2026-10-20): 8 of 8 reported; record in
+   `test/tool_validation/parasoft/README.md`. Rerun at every tool or
+   configuration change.
 3. **Compiler configuration.** C/C++test has no built-in definition for the
-   LoongArch cross compiler. The custom compiler definition is validated with
-   the known-violation samples and by comparing preprocessed output.
-
+   LoongArch cross compiler. `tools/parasoft/make_compiler_def.sh` derives
+   `gcc_14-loongarch64` from the vendor `gcc_14-64` definition (LP64 data
+   model, same GCC front end) and points it at
+   `loongarch64-linux-gnu-gcc-14`; the build tracer is restricted to that
+   compiler (`CPPTEST_SCAN_TRACE_COMMAND`). The definition is validated by the
+   known-violation run above and by the product and test-harness analyses,
+   which parse every port, BSP and kernel translation unit without
+   preprocessing or parse errors.
+4. **Analysis scopes.** `tools/misra.sh product` (compliance scope: kernel,
+   port and BSP, Release build) and `tools/misra.sh tests` (test harness,
+   including the port's `TX_REGRESSION_TEST` code). Reports are kept in
+   `docs/misra/reports/`.
 ### 3.3 QEMU (T2)
 
 1. Tests check behaviour (ordering, counts, results), not wall-clock time.
