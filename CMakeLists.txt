@@ -27,3 +27,4 @@ add_subdirectory(external/threadx)
 
 add_subdirectory(bsp/qemu_virt)
 add_subdirectory(test/bringup)
+add_subdirectory(test/threadx_demo)

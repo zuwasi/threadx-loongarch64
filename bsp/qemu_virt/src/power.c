@@ -11,7 +11,7 @@
 
 void bsp_poweroff(void)
 {
-    volatile uint8_t *sleep_ctl = (volatile uint8_t *) BSP_GED_SLEEP_CTL_ADDR;
+    volatile uint8_t *sleep_ctl = (volatile uint8_t *) BSP_GED_SLEEP_CTL_ADDR; /* parasoft-suppress MISRAC2025-RULE_11_4-b "DEV-007" */
 
     *sleep_ctl = (uint8_t) BSP_GED_SLEEP_CTL_POWEROFF;
 
@@ -19,7 +19,7 @@ void bsp_poweroff(void)
     bsp_cpu_halt();
 }
 
-void bsp_test_report(bool passed)
+void bsp_test_report(bool passed) /* parasoft-suppress MISRAC2025-RULE_8_7-a "DEV-011" */
 {
     if (passed)
     {

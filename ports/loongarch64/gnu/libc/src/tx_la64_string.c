@@ -16,10 +16,10 @@
 #include <stdint.h>
 #include <string.h>
 
-void *memcpy(void *dest, const void *src, size_t n)
+void *memcpy(void *dest, const void *src, size_t n) /* parasoft-suppress MISRAC2025-RULE_5_10-b "DEV-001" */ /* parasoft-suppress MISRAC2025-RULE_5_10-c "DEV-001" */
 {
-    uint8_t       *d = (uint8_t *) dest;
-    const uint8_t *s = (const uint8_t *) src;
+    uint8_t       *d = (uint8_t *) dest; /* parasoft-suppress MISRAC2025-RULE_11_5-b "DEV-009" */
+    const uint8_t *s = (const uint8_t *) src; /* parasoft-suppress MISRAC2025-RULE_11_5-b "DEV-009" */
     size_t         i;
 
     for (i = 0U; i < n; i++)
@@ -30,10 +30,10 @@ void *memcpy(void *dest, const void *src, size_t n)
     return dest;
 }
 
-void *memmove(void *dest, const void *src, size_t n)
+void *memmove(void *dest, const void *src, size_t n) /* parasoft-suppress MISRAC2025-RULE_5_10-b "DEV-001" */ /* parasoft-suppress MISRAC2025-RULE_5_10-c "DEV-001" */
 {
-    uint8_t       *d = (uint8_t *) dest;
-    const uint8_t *s = (const uint8_t *) src;
+    uint8_t       *d = (uint8_t *) dest; /* parasoft-suppress MISRAC2025-RULE_11_5-b "DEV-009" */
+    const uint8_t *s = (const uint8_t *) src; /* parasoft-suppress MISRAC2025-RULE_11_5-b "DEV-009" */
     size_t         i;
 
     if ((uintptr_t) d <= (uintptr_t) s)
@@ -54,32 +54,32 @@ void *memmove(void *dest, const void *src, size_t n)
     return dest;
 }
 
-void *memset(void *s, int c, size_t n)
+void *memset(void *s, int c, size_t n) /* parasoft-suppress MISRAC2025-RULE_5_10-b "DEV-001" */ /* parasoft-suppress MISRAC2025-RULE_5_10-c "DEV-001" */ /* parasoft-suppress MISRAC2025-DIR_4_6-b "DEV-008" */
 {
-    uint8_t *d     = (uint8_t *) s;
+    uint8_t *d     = (uint8_t *) s; /* parasoft-suppress MISRAC2025-RULE_11_5-b "DEV-009" */
     uint8_t  value = (uint8_t) ((uint32_t) c & 0xFFU);
     size_t   i;
 
     for (i = 0U; i < n; i++)
     {
-        d[i] = value;
+        d[i] = value; /* parasoft-suppress MISRAC2025-DIR_4_1-b "DEV-014" */
     }
 
     return s;
 }
 
-int memcmp(const void *s1, const void *s2, size_t n)
+int memcmp(const void *s1, const void *s2, size_t n) /* parasoft-suppress MISRAC2025-RULE_5_10-b "DEV-001" */ /* parasoft-suppress MISRAC2025-RULE_5_10-c "DEV-001" */ /* parasoft-suppress MISRAC2025-DIR_4_6-b "DEV-008" */
 {
-    const uint8_t *a      = (const uint8_t *) s1;
-    const uint8_t *b      = (const uint8_t *) s2;
-    int            result = 0;
+    const uint8_t *a      = (const uint8_t *) s1; /* parasoft-suppress MISRAC2025-RULE_11_5-b "DEV-009" */
+    const uint8_t *b      = (const uint8_t *) s2; /* parasoft-suppress MISRAC2025-RULE_11_5-b "DEV-009" */
+    int            result = 0; /* parasoft-suppress MISRAC2025-DIR_4_6-b "DEV-008" */
     size_t         i      = 0U;
 
     while ((i < n) && (result == 0))
     {
         if (a[i] != b[i])
         {
-            result = ((int) a[i]) - ((int) b[i]);
+            result = ((int) a[i]) - ((int) b[i]); /* parasoft-suppress MISRAC2025-DIR_4_6-b "DEV-008" */
         }
         i++;
     }

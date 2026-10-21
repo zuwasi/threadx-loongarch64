@@ -21,17 +21,17 @@
 
 static volatile uint8_t *uart_reg(uint32_t offset)
 {
-    return (volatile uint8_t *) (BSP_UART0_BASE + (uintptr_t) offset);
+    return (volatile uint8_t *) (BSP_UART0_BASE + (uintptr_t) offset); /* parasoft-suppress MISRAC2025-RULE_11_4-b "DEV-007" */
 }
 
-void bsp_uart_init(void)
+void bsp_uart_init(void) /* parasoft-suppress MISRAC2025-RULE_8_7-a "DEV-011" */
 {
     *uart_reg(UART_REG_IER) = 0U;
     *uart_reg(UART_REG_LCR) = (uint8_t) UART_LCR_8N1;
     *uart_reg(UART_REG_FCR) = (uint8_t) UART_FCR_ENABLE;
 }
 
-void bsp_uart_putc(char c)
+void bsp_uart_putc(char c) /* parasoft-suppress MISRAC2025-RULE_8_7-a "DEV-011" */
 {
     while ((*uart_reg(UART_REG_LSR) & (uint8_t) UART_LSR_THRE) == 0U)
     {
@@ -73,22 +73,27 @@ void bsp_uart_put_hex64(uint64_t value)
     }
 }
 
-void bsp_uart_put_dec(uint32_t value)
+void bsp_uart_put_dec(uint32_t value) /* parasoft-suppress MISRAC2025-RULE_8_7-a "DEV-011" */
 {
+    static const char digits[10] =
+    {
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
+    };
     char     buffer[10];
-    uint32_t count = 0U;
-    uint32_t rest  = value;
+    uint32_t digit_count = 0U;
+    uint32_t rest        = value;
 
     do
     {
-        buffer[count] = (char) ('0' + (char) (rest % 10U));
+        uint32_t digit = rest % 10U;
+        buffer[digit_count] = digits[digit];
         rest /= 10U;
-        count++;
-    } while ((rest != 0U) && (count < 10U));
+        digit_count++;
+    } while ((rest != 0U) && (digit_count < 10U));
 
-    while (count > 0U)
+    while (digit_count > 0U)
     {
-        count--;
-        bsp_uart_putc(buffer[count]);
+        digit_count--;
+        bsp_uart_putc(buffer[digit_count]);
     }
 }

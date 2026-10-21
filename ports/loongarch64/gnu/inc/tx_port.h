@@ -67,12 +67,26 @@
    previous value of this bit only.  */
 #define TX_LA64_CRMD_IE                         0x4
 
+/* Fixed context frame shared by exception entry, scheduling, and initial
+   thread construction.  The 75 used 64-bit slots are rounded to 16-byte
+   stack alignment.  */
+#define TX_LA64_CONTEXT_FRAME_SIZE              608
+#define TX_LA64_CONTEXT_ERA_OFFSET              256
+#define TX_LA64_CONTEXT_PRMD_OFFSET             264
+#define TX_LA64_CONTEXT_FPR_OFFSET              272
+#define TX_LA64_CONTEXT_FCSR_OFFSET             528
+#define TX_LA64_CONTEXT_FCC_OFFSET              536
+#define TX_LA64_CONTEXT_INTERRUPT_TYPE          1
+#define TX_LA64_SOLICITED_FRAME_SIZE             192
+#define TX_LA64_SOLICITED_FPR_OFFSET             104
+#define TX_LA64_SOLICITED_FCSR_OFFSET            168
+#define TX_LA64_SOLICITED_PRMD_OFFSET             176
+
 
 #ifndef __ASSEMBLER__
 
 /* Include for memset.  */
 #include <string.h>
-
 #ifdef TX_INCLUDE_USER_DEFINE_FILE
 #include "tx_user.h"
 #endif /* TX_INCLUDE_USER_DEFINE_FILE */
@@ -90,17 +104,18 @@
 
 #ifndef __ASSEMBLER__
 typedef char                                    CHAR;
-typedef unsigned char                           UCHAR;
-typedef int                                     INT;
-typedef unsigned int                            UINT;
-typedef int                                     LONG;
-typedef unsigned int                            ULONG;
-typedef unsigned long long                      ULONG64;
-typedef short                                   SHORT;
-typedef unsigned short                          USHORT;
+typedef unsigned char                           UCHAR; /* parasoft-suppress MISRAC2025-DIR_4_6-a "DEV-003" */ /* parasoft-suppress MISRAC2025-DIR_4_6-c "DEV-003" */
+typedef int                                     INT; /* parasoft-suppress MISRAC2025-DIR_4_6-a "DEV-003" */ /* parasoft-suppress MISRAC2025-DIR_4_6-c "DEV-003" */
+typedef unsigned int                            UINT; /* parasoft-suppress MISRAC2025-DIR_4_6-a "DEV-003" */ /* parasoft-suppress MISRAC2025-DIR_4_6-c "DEV-003" */
+typedef int                                     LONG; /* parasoft-suppress MISRAC2025-DIR_4_6-a "DEV-003" */ /* parasoft-suppress MISRAC2025-DIR_4_6-c "DEV-003" */
+typedef unsigned int                            ULONG; /* parasoft-suppress MISRAC2025-DIR_4_6-a "DEV-003" */ /* parasoft-suppress MISRAC2025-DIR_4_6-c "DEV-003" */
+typedef unsigned long long                      ULONG64; /* parasoft-suppress MISRAC2025-DIR_4_6-c "DEV-003" */
+typedef short                                   SHORT; /* parasoft-suppress MISRAC2025-DIR_4_6-a "DEV-003" */ /* parasoft-suppress MISRAC2025-DIR_4_6-c "DEV-003" */
+typedef unsigned short                          USHORT; /* parasoft-suppress MISRAC2025-DIR_4_6-a "DEV-003" */ /* parasoft-suppress MISRAC2025-DIR_4_6-c "DEV-003" */
 #define ULONG64_DEFINED
 #define ALIGN_TYPE_DEFINED
-typedef unsigned long long                      ALIGN_TYPE;
+typedef unsigned long long                      ALIGN_TYPE; /* parasoft-suppress MISRAC2025-DIR_4_6-a "DEV-003" */ /* parasoft-suppress MISRAC2025-DIR_4_6-c "DEV-003" */
+typedef char tx_la64_pointer_width_check[(sizeof(VOID *) == 8U) ? 1 : -1];
 #endif /* __ASSEMBLER__ */
 
 /* ULONG is 32-bit but pointers are 64-bit, so the thread pointer for a
@@ -108,11 +123,11 @@ typedef unsigned long long                      ALIGN_TYPE;
 #define TX_TIMER_INTERNAL_EXTENSION             VOID    *tx_timer_internal_extension_ptr;
 #define TX_TIMER_EXTENSION_PTR_DEFINED
 
-#define TX_THREAD_CREATE_TIMEOUT_SETUP(t)       (t) -> tx_thread_timer.tx_timer_internal_timeout_function =  &(_tx_thread_timeout);            \
+#define TX_THREAD_CREATE_TIMEOUT_SETUP(t)       (t) -> tx_thread_timer.tx_timer_internal_timeout_function =  &(_tx_thread_timeout);             /* parasoft-suppress MISRAC2025-DIR_4_9-a "DEV-004" */ \
                                                 (t) -> tx_thread_timer.tx_timer_internal_timeout_param =     0;                                \
                                                 (t) -> tx_thread_timer.tx_timer_internal_extension_ptr =     (VOID *) (t);
 
-#define TX_THREAD_TIMEOUT_POINTER_SETUP(t)      TX_PARAMETER_NOT_USED(timeout_input);                                                         \
+#define TX_THREAD_TIMEOUT_POINTER_SETUP(t)      TX_PARAMETER_NOT_USED(timeout_input);                                                          /* parasoft-suppress MISRAC2025-DIR_4_9-a "DEV-004" */ \
                                                 (t) =  (TX_THREAD *) _tx_timer_expired_timer_ptr -> tx_timer_internal_extension_ptr;
 
 
@@ -143,10 +158,19 @@ typedef unsigned long long                      ALIGN_TYPE;
 #endif
 
 
+/* System tick rate.  Must match the value _tx_initialize_low_level
+   programs into the periodic timer (LA-REQ-102).  Applications use it
+   to convert tx_time_get() ticks to seconds.  */
+
+#ifndef TX_TIMER_TICKS_PER_SECOND
+#define TX_TIMER_TICKS_PER_SECOND               100
+#endif
+
+
 /* Interrupt posture values (CRMD.IE).  */
 
-#define TX_INT_DISABLE                          0x00000000
-#define TX_INT_ENABLE                           TX_LA64_CRMD_IE
+#define TX_INT_DISABLE                          0x00000000U
+#define TX_INT_ENABLE                           ((UINT) TX_LA64_CRMD_IE)
 
 
 /* Trace time stamp source.  The BSP may override these with the stable
@@ -173,7 +197,7 @@ typedef unsigned long long                      ALIGN_TYPE;
 /* Stack checking forces stack filling.  */
 
 #ifdef TX_ENABLE_STACK_CHECKING
-#undef TX_DISABLE_STACK_FILLING
+#undef TX_DISABLE_STACK_FILLING /* parasoft-suppress MISRAC2025-RULE_20_5-a "DEV-012" */
 #endif
 
 
@@ -201,26 +225,26 @@ typedef unsigned long long                      ALIGN_TYPE;
 #endif
 
 
-#define TX_THREAD_CREATE_EXTENSION(thread_ptr)
-#define TX_THREAD_DELETE_EXTENSION(thread_ptr)
-#define TX_THREAD_COMPLETED_EXTENSION(thread_ptr)
-#define TX_THREAD_TERMINATED_EXTENSION(thread_ptr)
+#define TX_THREAD_CREATE_EXTENSION(thread_ptr) /* parasoft-suppress MISRAC2025-DIR_4_9-a "DEV-004" */
+#define TX_THREAD_DELETE_EXTENSION(thread_ptr) /* parasoft-suppress MISRAC2025-DIR_4_9-a "DEV-004" */
+#define TX_THREAD_COMPLETED_EXTENSION(thread_ptr) /* parasoft-suppress MISRAC2025-DIR_4_9-a "DEV-004" */
+#define TX_THREAD_TERMINATED_EXTENSION(thread_ptr) /* parasoft-suppress MISRAC2025-DIR_4_9-a "DEV-004" */
 
-#define TX_BLOCK_POOL_CREATE_EXTENSION(pool_ptr)
-#define TX_BYTE_POOL_CREATE_EXTENSION(pool_ptr)
-#define TX_EVENT_FLAGS_GROUP_CREATE_EXTENSION(group_ptr)
-#define TX_MUTEX_CREATE_EXTENSION(mutex_ptr)
-#define TX_QUEUE_CREATE_EXTENSION(queue_ptr)
-#define TX_SEMAPHORE_CREATE_EXTENSION(semaphore_ptr)
-#define TX_TIMER_CREATE_EXTENSION(timer_ptr)
+#define TX_BLOCK_POOL_CREATE_EXTENSION(pool_ptr) /* parasoft-suppress MISRAC2025-DIR_4_9-a "DEV-004" */
+#define TX_BYTE_POOL_CREATE_EXTENSION(pool_ptr) /* parasoft-suppress MISRAC2025-DIR_4_9-a "DEV-004" */
+#define TX_EVENT_FLAGS_GROUP_CREATE_EXTENSION(group_ptr) /* parasoft-suppress MISRAC2025-DIR_4_9-a "DEV-004" */ /* parasoft-suppress MISRAC2025-RULE_1_1-c "DEV-005" */
+#define TX_MUTEX_CREATE_EXTENSION(mutex_ptr) /* parasoft-suppress MISRAC2025-DIR_4_9-a "DEV-004" */
+#define TX_QUEUE_CREATE_EXTENSION(queue_ptr) /* parasoft-suppress MISRAC2025-DIR_4_9-a "DEV-004" */
+#define TX_SEMAPHORE_CREATE_EXTENSION(semaphore_ptr) /* parasoft-suppress MISRAC2025-DIR_4_9-a "DEV-004" */
+#define TX_TIMER_CREATE_EXTENSION(timer_ptr) /* parasoft-suppress MISRAC2025-DIR_4_9-a "DEV-004" */
 
-#define TX_BLOCK_POOL_DELETE_EXTENSION(pool_ptr)
-#define TX_BYTE_POOL_DELETE_EXTENSION(pool_ptr)
-#define TX_EVENT_FLAGS_GROUP_DELETE_EXTENSION(group_ptr)
-#define TX_MUTEX_DELETE_EXTENSION(mutex_ptr)
-#define TX_QUEUE_DELETE_EXTENSION(queue_ptr)
-#define TX_SEMAPHORE_DELETE_EXTENSION(semaphore_ptr)
-#define TX_TIMER_DELETE_EXTENSION(timer_ptr)
+#define TX_BLOCK_POOL_DELETE_EXTENSION(pool_ptr) /* parasoft-suppress MISRAC2025-DIR_4_9-a "DEV-004" */
+#define TX_BYTE_POOL_DELETE_EXTENSION(pool_ptr) /* parasoft-suppress MISRAC2025-DIR_4_9-a "DEV-004" */
+#define TX_EVENT_FLAGS_GROUP_DELETE_EXTENSION(group_ptr) /* parasoft-suppress MISRAC2025-DIR_4_9-a "DEV-004" */ /* parasoft-suppress MISRAC2025-RULE_1_1-c "DEV-005" */
+#define TX_MUTEX_DELETE_EXTENSION(mutex_ptr) /* parasoft-suppress MISRAC2025-DIR_4_9-a "DEV-004" */
+#define TX_QUEUE_DELETE_EXTENSION(queue_ptr) /* parasoft-suppress MISRAC2025-DIR_4_9-a "DEV-004" */
+#define TX_SEMAPHORE_DELETE_EXTENSION(semaphore_ptr) /* parasoft-suppress MISRAC2025-DIR_4_9-a "DEV-004" */
+#define TX_TIMER_DELETE_EXTENSION(timer_ptr) /* parasoft-suppress MISRAC2025-DIR_4_9-a "DEV-004" */
 
 
 /* Interrupt lockout and restore.  All CSR access is done in assembly
@@ -228,7 +252,12 @@ typedef unsigned long long                      ALIGN_TYPE;
    (MISRA C:2025 Directive 4.3).  */
 
 #ifndef __ASSEMBLER__
-UINT                                            _tx_thread_interrupt_control(UINT new_posture);
+UINT                                            _tx_thread_interrupt_control(UINT new_posture); /* parasoft-suppress MISRAC2025-RULE_5_10-a "DEV-002" */ /* parasoft-suppress MISRAC2025-RULE_8_6-b "DEV-006" */
+
+/* System tick entry point, called by the exception vector assembly.  The
+   prototype is visible in every translation unit that includes this header,
+   including the definition (Rule 8.4).  */
+VOID                                            _tx_timer_interrupt(VOID); /* parasoft-suppress MISRAC2025-RULE_5_10-a "DEV-002" */
 #endif
 
 #define TX_INTERRUPT_SAVE_AREA                  UINT interrupt_save;
@@ -245,21 +274,26 @@ UINT                                            _tx_thread_interrupt_control(UIN
 #define TX_SEMAPHORE_DISABLE                    TX_DISABLE
 
 
-/* Coverage test extensions for the ThreadX regression test.  */
+/* Coverage test extensions for the ThreadX regression test.  The upstream
+   regression suite and the port hook macros below are compiled only into
+   regression builds (TX_REGRESSION_TEST is defined by
+   test/regression/CMakeLists.txt).  */
 
 #ifndef __ASSEMBLER__
 
-typedef unsigned int    TEST_FLAG;
+#ifdef TX_REGRESSION_TEST
+
+typedef unsigned int    TEST_FLAG; /* parasoft-suppress MISRAC2025-DIR_4_6-a "DEV-003" */ /* parasoft-suppress MISRAC2025-DIR_4_6-c "DEV-003" */
 extern TEST_FLAG        threadx_byte_allocate_loop_test;
 extern TEST_FLAG        threadx_byte_release_loop_test;
-extern TEST_FLAG        threadx_mutex_suspension_put_test;
-extern TEST_FLAG        threadx_mutex_suspension_priority_test;
+extern TEST_FLAG        threadx_mutex_suspension_put_test; /* parasoft-suppress MISRAC2025-RULE_1_1-a "DEV-005" */ /* parasoft-suppress MISRAC2025-RULE_1_1-b "DEV-005" */
+extern TEST_FLAG        threadx_mutex_suspension_priority_test; /* parasoft-suppress MISRAC2025-RULE_1_1-a "DEV-005" */ /* parasoft-suppress MISRAC2025-RULE_1_1-b "DEV-005" */
 #ifndef TX_TIMER_PROCESS_IN_ISR
 extern TEST_FLAG        threadx_delete_timer_thread;
 #endif
 
-extern void             abort_and_resume_byte_allocating_thread(void);
-extern void             abort_all_threads_suspended_on_mutex(void);
+extern void             abort_and_resume_byte_allocating_thread(void); /* parasoft-suppress MISRAC2025-RULE_1_1-a "DEV-005" */ /* parasoft-suppress MISRAC2025-RULE_1_1-b "DEV-005" */
+extern void             abort_all_threads_suspended_on_mutex(void); /* parasoft-suppress MISRAC2025-RULE_1_1-a "DEV-005" */ /* parasoft-suppress MISRAC2025-RULE_1_1-b "DEV-005" */
 extern void             suspend_lowest_priority(void);
 #ifndef TX_TIMER_PROCESS_IN_ISR
 extern void             delete_timer_thread(void);
@@ -268,8 +302,14 @@ extern TEST_FLAG        test_stack_analyze_flag;
 extern TEST_FLAG        test_initialize_flag;
 extern TEST_FLAG        test_forced_mutex_timeout;
 
+/* Upstream regression-suite hook (testcontrol.c defines it): dispatched
+   from _tx_timer_interrupt before any tick processing.  The reference is
+   weak, so builds that provide no dispatch function link and run without
+   it (tx_timer_interrupt.c).  */
+extern void             test_interrupt_dispatch(void) __attribute__((weak));
 
-#ifdef TX_REGRESSION_TEST
+
+
 
 #define TX_BYTE_ALLOCATE_EXTENSION              if (threadx_byte_allocate_loop_test == ((TEST_FLAG) 1))         \
                                                 {                                                               \
@@ -295,7 +335,7 @@ extern TEST_FLAG        test_forced_mutex_timeout;
                                                     _tx_thread_wait_abort(mutex_ptr -> tx_mutex_suspension_list); \
                                                 }
 
-#define TX_MUTEX_PRIORITY_CHANGE_EXTENSION      if (threadx_mutex_suspension_priority_test == ((TEST_FLAG) 1))  \
+#define TX_MUTEX_PRIORITY_CHANGE_EXTENSION      if (threadx_mutex_suspension_priority_test == ((TEST_FLAG) 1))   /* parasoft-suppress MISRAC2025-RULE_1_1-c "DEV-005" */ \
                                                 {                                                               \
                                                     threadx_mutex_suspension_priority_test = ((TEST_FLAG) 0);   \
                                                     suspend_lowest_priority();                                  \
@@ -303,7 +343,7 @@ extern TEST_FLAG        test_forced_mutex_timeout;
 
 #ifndef TX_TIMER_PROCESS_IN_ISR
 
-#define TX_TIMER_INITIALIZE_EXTENSION(a)        if (threadx_delete_timer_thread == ((TEST_FLAG) 1))             \
+#define TX_TIMER_INITIALIZE_EXTENSION(a)        if (threadx_delete_timer_thread == ((TEST_FLAG) 1))              /* parasoft-suppress MISRAC2025-DIR_4_9-a "DEV-004" */ \
                                                 {                                                               \
                                                     threadx_delete_timer_thread = ((TEST_FLAG) 0);              \
                                                     delete_timer_thread();                                      \
@@ -312,7 +352,7 @@ extern TEST_FLAG        test_forced_mutex_timeout;
 
 #endif
 
-#define TX_THREAD_STACK_ANALYZE_EXTENSION       if (test_stack_analyze_flag == ((TEST_FLAG) 1))                 \
+#define TX_THREAD_STACK_ANALYZE_EXTENSION       if (test_stack_analyze_flag == ((TEST_FLAG) 1))                  /* parasoft-suppress MISRAC2025-RULE_1_1-c "DEV-005" */ \
                                                 {                                                               \
                                                     thread_ptr -> tx_thread_id =  ((TEST_FLAG) 0);              \
                                                     test_stack_analyze_flag =     ((TEST_FLAG) 0);              \
@@ -332,7 +372,7 @@ extern TEST_FLAG        test_forced_mutex_timeout;
                                                     test_stack_analyze_flag =     ((TEST_FLAG) 0);              \
                                                 }
 
-#define TX_INITIALIZE_KERNEL_ENTER_EXTENSION    if (test_initialize_flag == ((TEST_FLAG) 1))                    \
+#define TX_INITIALIZE_KERNEL_ENTER_EXTENSION    if (test_initialize_flag == ((TEST_FLAG) 1))                     /* parasoft-suppress MISRAC2025-RULE_1_1-c "DEV-005" */ \
                                                 {                                                               \
                                                     test_initialize_flag =  ((TEST_FLAG) 0);                    \
                                                     return;                                                     \
@@ -343,14 +383,17 @@ extern TEST_FLAG        test_forced_mutex_timeout;
 #endif /* __ASSEMBLER__ */
 
 
-/* ThreadX version ID.  */
+/* ThreadX version ID.  The upstream regression suite prints this string
+   (its testcontrol.c defines TX_THREAD_INIT before including tx_api.h, so
+   that translation unit owns the single definition).  The declaration is
+   always visible so a compatible declaration precedes the definition
+   (Rule 8.4), and both state the array size explicitly (Rule 8.11).  */
 
 #ifndef __ASSEMBLER__
+extern  CHAR                    _tx_version_id[160]; /* parasoft-suppress MISRAC2025-RULE_5_10-a "DEV-002" */ /* parasoft-suppress MISRAC2025-RULE_8_6-b "DEV-013" */ /* parasoft-suppress MISRAC2025-RULE_2_8-a "DEV-013" */
 #ifdef TX_THREAD_INIT
-CHAR                            _tx_version_id[] =
-                                    "(c) 2026 Engineering Software Lab Israel (ESL). Based on Eclipse ThreadX. * ThreadX LoongArch64/GNU Version 6.5.2.202603 *";
-#else
-extern  CHAR                    _tx_version_id[];
+CHAR                            _tx_version_id[160] =
+                                    "(c) 2026 Engineering Software Lab Israel (ESL). Based on Eclipse ThreadX. * ThreadX LoongArch64/GNU Version 6.5.2.202603 *"; /* parasoft-suppress MISRAC2025-RULE_5_10-a "DEV-002" */
 #endif /* TX_THREAD_INIT */
 #endif /* __ASSEMBLER__ */
 

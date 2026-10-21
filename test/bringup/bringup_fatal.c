@@ -12,10 +12,9 @@
     Verifies: LA-REQ-106  */
 
 #include "bsp.h"
+#include "bringup.h"
 
-extern void bringup_trigger_break(void);
-
-int main(void)
+int main(void) /* parasoft-suppress MISRAC2025-RULE_8_6-a "separate freestanding images, one analysis project" */ /* parasoft-suppress MISRAC2025-RULE_5_8-b "separate freestanding images, one analysis project" */ /* parasoft-suppress MISRAC2025-RULE_8_3-c "separate freestanding images, one analysis project" */
 {
     bsp_uart_init();
     bsp_uart_puts("Fatal exception test: raising BRK\n");

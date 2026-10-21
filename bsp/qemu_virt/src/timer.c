@@ -21,19 +21,23 @@
 
 static uint64_t timer_frequency_hz = 0U;
 
-bool bsp_timer_init(uint32_t ticks_per_second)
+bool bsp_timer_init(uint32_t ticks_per_second) /* parasoft-suppress MISRAC2025-RULE_8_7-a "DEV-011" */
 {
     bool     result = false;
     uint64_t cc_freq;
     uint32_t muldiv;
+    uint32_t mul_value;
+    uint32_t div_value;
     uint64_t cc_mul;
     uint64_t cc_div;
     uint64_t init_value;
 
     cc_freq = (uint64_t) bsp_cpucfg_read(CPUCFG_CC_FREQ);
     muldiv  = bsp_cpucfg_read(CPUCFG_CC_MULDIV);
-    cc_mul  = (uint64_t) (muldiv & 0xFFFFU);
-    cc_div  = (uint64_t) ((muldiv >> 16) & 0xFFFFU);
+    mul_value = muldiv & 0xFFFFU;
+    div_value = (muldiv >> 16U) & 0xFFFFU;
+    cc_mul  = (uint64_t) mul_value;
+    cc_div  = (uint64_t) div_value;
 
     if ((ticks_per_second != 0U) && (cc_freq != 0U) && (cc_mul != 0U) && (cc_div != 0U))
     {
@@ -51,7 +55,7 @@ bool bsp_timer_init(uint32_t ticks_per_second)
     return result;
 }
 
-uint64_t bsp_timer_frequency(void)
+uint64_t bsp_timer_frequency(void) /* parasoft-suppress MISRAC2025-RULE_8_7-a "DEV-011" */
 {
     return timer_frequency_hz;
 }

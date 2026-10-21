@@ -15,7 +15,7 @@
 #define ESTAT_ECODE_SHIFT   16U
 #define ESTAT_ECODE_MASK    0x3FULL
 
-void bsp_fatal_exception(uint64_t estat, uint64_t era, uint64_t badv)
+void bsp_fatal_exception(uint64_t estat, uint64_t era, uint64_t badv) /* parasoft-suppress MISRAC2025-RULE_8_7-a "DEV-011" */
 {
     bsp_irq_line_disable(0x1FFFU);
 

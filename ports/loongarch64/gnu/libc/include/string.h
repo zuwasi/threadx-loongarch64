@@ -16,9 +16,9 @@
 
 #include <stddef.h>
 
-void *memcpy(void *dest, const void *src, size_t n);
-void *memmove(void *dest, const void *src, size_t n);
-void *memset(void *s, int c, size_t n);
-int   memcmp(const void *s1, const void *s2, size_t n);
+void *memcpy(void *dest, const void *src, size_t n); /* parasoft-suppress MISRAC2025-RULE_5_10-b "DEV-001" */ /* parasoft-suppress MISRAC2025-RULE_5_10-c "DEV-001" */
+void *memmove(void *dest, const void *src, size_t n); /* parasoft-suppress MISRAC2025-RULE_5_10-b "DEV-001" */ /* parasoft-suppress MISRAC2025-RULE_5_10-c "DEV-001" */
+void *memset(void *s, int c, size_t n); /* parasoft-suppress MISRAC2025-RULE_5_10-b "DEV-001" */ /* parasoft-suppress MISRAC2025-RULE_5_10-c "DEV-001" */ /* parasoft-suppress MISRAC2025-DIR_4_6-b "DEV-008" */
+int   memcmp(const void *s1, const void *s2, size_t n); /* parasoft-suppress MISRAC2025-RULE_5_10-b "DEV-001" */ /* parasoft-suppress MISRAC2025-RULE_5_10-c "DEV-001" */ /* parasoft-suppress MISRAC2025-DIR_4_6-b "DEV-008" */
 
 #endif /* TX_LA64_STRING_H */

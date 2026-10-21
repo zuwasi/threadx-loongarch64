@@ -12,6 +12,7 @@
     Requirements: LA-REQ-102, LA-REQ-103, LA-REQ-106  */
 
 #define CSR_EUEN    0x2
+#define CSR_CRMD    0x0
 #define CSR_ECFG    0x4
 #define CSR_ESTAT   0x5
 #define CSR_ERA     0x6
@@ -63,6 +64,22 @@ bsp_irq_line_disable:
     jr      $ra
     .size   bsp_irq_line_disable, . - bsp_irq_line_disable
 
+/* uint64_t bsp_crmd_read(void)  */
+    .globl  bsp_crmd_read
+    .type   bsp_crmd_read, @function
+bsp_crmd_read:
+    csrrd   $a0, CSR_CRMD
+    jr      $ra
+    .size   bsp_crmd_read, . - bsp_crmd_read
+
+/* uint64_t bsp_ecfg_read(void)  */
+    .globl  bsp_ecfg_read
+    .type   bsp_ecfg_read, @function
+bsp_ecfg_read:
+    csrrd   $a0, CSR_ECFG
+    jr      $ra
+    .size   bsp_ecfg_read, . - bsp_ecfg_read
+
 /* uint64_t bsp_estat_read(void)  */
     .globl  bsp_estat_read
     .type   bsp_estat_read, @function
@@ -100,12 +117,12 @@ bsp_cpu_idle:
     .type   bsp_cpu_halt, @function
 bsp_cpu_halt:
     li.w    $t0, 0x4
-    csrxchg $zero, $t0, 0x0
+    csrxchg $zero, $t0, CSR_CRMD
 1:  idle    0
     b       1b
     .size   bsp_cpu_halt, . - bsp_cpu_halt
 
-/* void bsp_exception_entry_set(uintptr_t entry): EENTRY, 4 KiB aligned  */
+/* void bsp_exception_entry_set(void (*entry)(void)): EENTRY, 4 KiB aligned  */
     .globl  bsp_exception_entry_set
     .type   bsp_exception_entry_set, @function
 bsp_exception_entry_set:

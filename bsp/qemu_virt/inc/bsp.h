@@ -16,17 +16,19 @@
 
 /* CPU access, implemented in assembly (bsp_cpu.S).  All control and status
    register access is confined there (MISRA C:2025 Dir 4.3).  */
-uint32_t bsp_cpucfg_read(uint32_t word);
-void     bsp_timer_config_write(uint64_t tcfg);
-void     bsp_timer_ack(void);
-void     bsp_irq_line_enable(uint32_t line_mask);
-void     bsp_irq_line_disable(uint32_t line_mask);
-uint64_t bsp_estat_read(void);
-uint64_t bsp_era_read(void);
-uint64_t bsp_badv_read(void);
-void     bsp_cpu_idle(void);
-void     bsp_cpu_halt(void);
-void     bsp_exception_entry_set(uintptr_t entry);
+uint32_t bsp_cpucfg_read(uint32_t word); /* parasoft-suppress MISRAC2025-RULE_8_6-b "DEV-006" */
+void     bsp_timer_config_write(uint64_t tcfg); /* parasoft-suppress MISRAC2025-RULE_8_6-b "DEV-006" */
+void     bsp_timer_ack(void); /* parasoft-suppress MISRAC2025-RULE_8_6-b "DEV-006" */
+void     bsp_irq_line_enable(uint32_t line_mask); /* parasoft-suppress MISRAC2025-RULE_8_6-b "DEV-006" */
+void     bsp_irq_line_disable(uint32_t line_mask); /* parasoft-suppress MISRAC2025-RULE_8_6-b "DEV-006" */
+uint64_t bsp_crmd_read(void); /* parasoft-suppress MISRAC2025-RULE_8_6-b "DEV-006" */
+uint64_t bsp_ecfg_read(void); /* parasoft-suppress MISRAC2025-RULE_8_6-b "DEV-006" */
+uint64_t bsp_estat_read(void); /* parasoft-suppress MISRAC2025-RULE_8_6-b "DEV-006" */
+uint64_t bsp_era_read(void); /* parasoft-suppress MISRAC2025-RULE_8_6-b "DEV-006" */
+uint64_t bsp_badv_read(void); /* parasoft-suppress MISRAC2025-RULE_8_6-b "DEV-006" */
+void     bsp_cpu_idle(void); /* parasoft-suppress MISRAC2025-RULE_8_6-b "DEV-006" */
+void     bsp_cpu_halt(void); /* parasoft-suppress MISRAC2025-RULE_8_6-b "DEV-006" */
+void     bsp_exception_entry_set(void (*entry)(void)); /* parasoft-suppress MISRAC2025-RULE_8_6-b "DEV-006" */
 
 /* UART console (LA-REQ-104).  */
 void     bsp_uart_init(void);
