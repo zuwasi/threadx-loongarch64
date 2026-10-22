@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ESL: Eclipse ThreadX on LoongArch64, from zero to an IEC 61508 SIL 3 release candidate in 4 days</title>
+<meta name="description" content="Technical case file: porting Eclipse ThreadX to Loongson LoongArch64, QEMU virt BSP, upstream regression 576/576, MISRA C:2025 with Parasoft C/C++test, structural coverage and the IEC 61508 SIL 3 evidence trail, in four days.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f4eedc;--paper2:#ece4cc;--ink:#1d1a16;--ink2:#4a443a;--rule:#b9ae90;
+  --stamp:#b8322a;--blue:#12457a;--ok:#2f6b3a;--warn:#9a5b10;
+  --type:"Special Elite","Courier New",Courier,monospace;
+  --body:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"JetBrains Mono",Consolas,"Courier New",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#d9d0b8;color:var(--ink);font-family:var(--body)}
+body{background:repeating-linear-gradient(0deg,rgba(0,0,0,.035) 0 1px,transparent 1px 34px),radial-gradient(ellipse at 50% 40%,#e3dabf,#c9bf9f 90%)}
+.deck{display:flex;height:100vh;height:100dvh;width:100vw;transition:transform .6s cubic-bezier(.2,.7,.3,1);will-change:transform}
+.slide{flex:0 0 100vw;height:100vh;height:100dvh;padding:clamp(14px,3vh,40px) clamp(16px,4.5vw,80px) clamp(56px,9vh,90px);position:relative;display:flex;justify-content:center;align-items:stretch;overflow:hidden}
+.page{position:relative;width:100%;max-width:1500px;background:var(--paper);border:1px solid #c8bc9c;box-shadow:0 2px 0 #cfc4a4,0 18px 40px rgba(60,45,20,.35);padding:clamp(14px,2.6vh,34px) clamp(16px,3vw,50px);display:flex;flex-direction:column;gap:clamp(8px,1.4vh,16px);overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}
+.page::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 12px 50%,rgba(0,0,0,.08) 0 5px,transparent 6px),linear-gradient(90deg,rgba(0,0,0,.06),transparent 40px);background-size:100% 120px,100% 100%;opacity:.7}
+.page>*{position:relative;z-index:1}
+.filehead{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;border-bottom:2px solid var(--ink);padding-bottom:8px;font-family:var(--type);font-size:clamp(10px,.95vw,13px);letter-spacing:.05em;text-transform:uppercase;color:var(--ink2)}
+.filehead>span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.filehead b{color:var(--ink)}
+.tabs{display:flex;gap:3px;flex:0 0 auto}
+.tabs span{padding:3px 8px;border:1px solid var(--rule);border-bottom:none;background:var(--paper2);font-size:.86em;cursor:pointer;white-space:nowrap}
+.tabs span:hover{background:#fff}
+.tabs span.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+h1,h2,h3{font-family:var(--type);font-weight:400;letter-spacing:-.01em;line-height:1.1}
+h1{font-size:clamp(26px,4.4vw,58px)}
+h2{font-size:clamp(19px,2.6vw,36px)}
+h3{font-size:clamp(15px,1.5vw,20px);margin-bottom:6px}
+.sub{font-size:clamp(13px,1.35vw,17px);color:var(--ink2);max-width:80ch;line-height:1.5}
+p.t{font-size:clamp(12.5px,1.2vw,15px);line-height:1.5;color:var(--ink2)}
+.stamp{display:inline-block;font-family:var(--type);text-transform:uppercase;color:var(--stamp);border:3px double var(--stamp);border-radius:6px;padding:4px 12px;letter-spacing:.12em;font-size:clamp(11px,1.1vw,15px);transform:rotate(-3deg);mix-blend-mode:multiply;opacity:.9}
+.stamp.big{font-size:clamp(13px,1.7vw,22px);padding:7px 16px}
+.stamp.blue{color:var(--blue);border-color:var(--blue)}.stamp.ok{color:var(--ok);border-color:var(--ok)}.stamp.warn{color:var(--warn);border-color:var(--warn)}
+.stamps{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.movehead{display:flex;align-items:center;gap:16px}
+.movehead h2{flex:1;min-width:0}
+.roundstamp{width:clamp(54px,6vw,80px);height:clamp(54px,6vw,80px);border-radius:50%;border:3px double var(--stamp);display:grid;place-items:center;color:var(--stamp);font-family:var(--type);text-align:center;line-height:1;transform:rotate(-8deg);mix-blend-mode:multiply;flex:0 0 auto}
+.roundstamp small{display:block;font-size:.5em;letter-spacing:.12em}
+.roundstamp b{font-weight:400;font-size:clamp(18px,2.2vw,30px)}
+.grid{display:grid;grid-template-columns:1.4fr .85fr;gap:clamp(12px,2.2vw,32px);align-items:start;min-height:0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:clamp(12px,2vw,28px);align-items:start}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(10px,1.6vw,22px);align-items:start}
+.exhibit{position:relative;background:#fff;padding:10px 10px 32px;border:1px solid #d8d0b8;box-shadow:0 10px 24px rgba(60,45,20,.25);transform:rotate(-.5deg)}
+.exhibit img{display:block;width:100%;height:auto;border:1px solid #ddd}
+.exhibit .label{position:absolute;left:12px;right:12px;bottom:8px;font-family:var(--type);font-size:clamp(10px,.95vw,13px);color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.clip{position:absolute;top:-16px;left:34px;width:22px;height:60px;border:3px solid #8a8a8a;border-radius:11px;border-bottom-color:transparent;transform:rotate(6deg)}
+.clip::after{content:"";position:absolute;left:5px;top:12px;width:8px;height:38px;border:3px solid #8a8a8a;border-radius:6px;border-top-color:transparent}
+.pin{position:absolute;width:28px;height:28px;border-radius:50%;background:var(--stamp);color:#fff;font-family:var(--type);font-size:14px;display:grid;place-items:center;box-shadow:0 2px 6px rgba(0,0,0,.3);opacity:0;transform:scale(.3);transition:opacity .35s,transform .35s cubic-bezier(.3,1.6,.5,1)}
+.pin.blue{background:var(--blue)}.pin.ok{background:var(--ok)}.pin.warn{background:var(--warn)}
+.active .pin{opacity:1;transform:scale(1)}
+.notes{display:flex;flex-direction:column;gap:9px}
+.note{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:start;padding:9px 12px;border-left:3px solid var(--ink);background:rgba(255,255,255,.4);opacity:0;transform:translateY(10px);transition:opacity .45s,transform .45s}
+.active .note{opacity:1;transform:none}
+.note .k{width:26px;height:26px;border-radius:50%;background:var(--stamp);color:#fff;display:grid;place-items:center;font-family:var(--type);font-size:13px;font-style:normal}
+.note.blue .k{background:var(--blue)}.note.ok .k{background:var(--ok)}.note.warn .k{background:var(--warn)}
+.note.blue{border-color:var(--blue)}.note.ok{border-color:var(--ok)}.note.warn{border-color:var(--warn)}
+.note b{display:block;font-size:clamp(12.5px,1.2vw,15px);font-weight:600}
+.note span{font-size:clamp(11.5px,1.05vw,13.5px);color:var(--ink2);line-height:1.45}
+code{font-family:var(--mono);font-size:.92em;background:rgba(0,0,0,.06);padding:0 4px}
+/* teleprinter */
+.tape{position:relative;background:#fbf8ee;border-top:2px dashed var(--rule);border-bottom:2px dashed var(--rule);padding:14px 130px 14px 32px;font-family:var(--mono);font-size:clamp(10.5px,1.05vw,13.5px);line-height:1.55;color:var(--ink);white-space:pre-wrap;word-break:break-word;min-height:26vh;box-shadow:inset 0 0 40px rgba(120,90,40,.08)}
+.tape::before{content:"";position:absolute;left:10px;top:0;bottom:0;width:8px;background:radial-gradient(circle,rgba(0,0,0,.18) 0 3px,transparent 4px) 0 0/8px 22px repeat-y}
+.tape .rcvd{position:absolute;right:16px;top:10px}
+.tape .h{color:var(--blue);font-weight:700}.tape .g{color:var(--ok);font-weight:700}.tape .r{color:var(--stamp);font-weight:700}.tape .y{color:var(--warn);font-weight:700}.tape .m,.tape .p{color:#7a7262}
+.cursor::after{content:"\2588";animation:blink 1s steps(1) infinite;color:var(--ink)}
+@keyframes blink{50%{opacity:0}}
+/* code editor */
+.code{background:#1e1e1e;border-radius:6px;box-shadow:0 10px 24px rgba(30,20,10,.35);overflow:hidden;min-width:0;border:1px solid #111}
+.code .bar{display:flex;align-items:center;gap:7px;background:#2d2d2d;padding:6px 10px;font-family:var(--mono);font-size:11.5px;color:#cfcfcf;border-bottom:1px solid #111}
+.code .bar i{width:10px;height:10px;border-radius:50%;background:#ff5f56;display:inline-block}
+.code .bar i:nth-child(2){background:#ffbd2e}.code .bar i:nth-child(3){background:#27c93f}
+.code .bar span{margin-left:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.code pre{font-variant-ligatures:none;margin:0;padding:10px 14px;font-family:var(--mono);font-size:clamp(10.5px,.92vw,13px);line-height:1.5;color:#d4d4d4;overflow:auto;max-height:64vh;tab-size:4}
+.tk-c{color:#6a9955;font-style:italic}.tk-k{color:#569cd6}.tk-t{color:#4ec9b0}.tk-s{color:#ce9178}.tk-n{color:#b5cea8}.tk-f{color:#dcdcaa}.tk-m{color:#4fc1ff}.tk-p{color:#c586c0}.tk-r{color:#9cdcfe}.tk-i{color:#c586c0;font-weight:600}.tk-d{color:#d7ba7d}.tk-l{color:#dcdcaa;font-weight:600}.tk-sup{color:#f48771;font-style:italic}.tk-add{color:#89d185}.tk-del{color:#f48771}
+/* tables */
+.tw{overflow-x:auto;max-width:100%}
+table.form{width:100%;border-collapse:collapse;font-size:clamp(11px,1.02vw,13.5px);background:#fbf8ee;border:1px solid var(--ink)}
+table.form th,table.form td{padding:6px 9px;border:1px solid var(--rule);text-align:left;vertical-align:top;line-height:1.4}
+table.form th{font-family:var(--type);font-weight:400;letter-spacing:.05em;text-transform:uppercase;font-size:.85em;background:var(--paper2)}
+table.form td.v,table.form td code{font-family:var(--mono)}
+table.form tr.row{opacity:0;transform:translateX(-8px);transition:opacity .4s,transform .4s}
+.active table.form tr.row{opacity:1;transform:none}
+table.form td.hl{background:#f3e3b8;font-weight:600}
+.list{display:grid;gap:7px;font-size:clamp(12.5px,1.25vw,16px);line-height:1.45}
+.list div{display:grid;grid-template-columns:22px 1fr;gap:6px}
+.list div::before{content:"\00a7";font-family:var(--type);color:var(--stamp)}
+.brand{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.brand img{height:clamp(44px,7vh,72px);width:auto;border:1px solid var(--rule);padding:3px;background:#fff}
+.brand .who{font-family:var(--type);font-size:clamp(11px,1.15vw,15px);color:var(--ink2);line-height:1.4}
+.footnote{font-size:clamp(10.5px,.98vw,12.5px);color:var(--ink2);line-height:1.45}
+.footnote a,.page a{color:var(--blue)}
+/* kpis */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.kpi{border:2px solid var(--ink);background:#fbf8ee;padding:10px 12px;position:relative}
+.kpi b{display:block;font-family:var(--type);font-weight:400;font-size:clamp(22px,2.6vw,36px);line-height:1}
+.kpi span{display:block;font-size:clamp(11px,1vw,13px);color:var(--ink2);margin-top:5px;line-height:1.35}
+.kpi.ok b{color:var(--ok)}.kpi.red b{color:var(--stamp)}.kpi.blue b{color:var(--blue)}.kpi.warn b{color:var(--warn)}
+/* toc */
+.toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+.toc a{display:block;text-decoration:none;color:var(--ink);border:1px solid var(--rule);background:#fbf8ee;padding:10px 12px;border-left:4px solid var(--stamp);cursor:pointer}
+.toc a:hover{background:#fff}
+.toc a b{font-family:var(--type);font-weight:400;font-size:clamp(14px,1.4vw,18px);display:block}
+.toc a span{font-size:clamp(11px,1vw,13px);color:var(--ink2);line-height:1.4}
+.toc a em{float:right;font-family:var(--type);font-style:normal;color:var(--stamp)}
+/* flow / diagrams */
+.flow{display:flex;align-items:stretch;gap:0;flex-wrap:wrap}
+.flow .st{flex:1 1 120px;background:#fbf8ee;border:1.5px solid var(--ink);padding:9px 10px;position:relative;margin:4px 16px 4px 0;font-size:clamp(11px,1vw,13px);line-height:1.35}
+.flow .st:not(:last-child)::after{content:"\25B6";position:absolute;right:-15px;top:50%;transform:translateY(-50%);color:var(--stamp);font-size:12px}
+.flow .st b{display:block;font-family:var(--type);font-weight:400;font-size:1.12em;margin-bottom:3px}
+.flow .st.done{border-color:var(--ok)}.flow .st.open{border-style:dashed;border-color:var(--warn)}
+.frames{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fr{border:2px solid var(--ink);background:#fbf8ee}
+.fr h4{font-family:var(--type);font-weight:400;background:var(--ink);color:var(--paper);padding:5px 10px;font-size:clamp(12px,1.1vw,15px)}
+.fr div{display:flex;justify-content:space-between;gap:8px;padding:4px 10px;border-top:1px solid var(--rule);font-family:var(--mono);font-size:clamp(10.5px,.95vw,12.5px)}
+.fr div:nth-child(odd){background:rgba(0,0,0,.03)}
+.fr div em{font-style:normal;color:var(--ink2)}
+.route{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-family:var(--mono);font-size:clamp(10.5px,.95vw,12.5px)}
+.route span{border:1.5px solid var(--ink);background:#fbf8ee;padding:6px 9px}
+.route span.hw{border-color:var(--blue);color:var(--blue)}
+.route i{font-style:normal;color:var(--stamp);font-weight:700}
+.days{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.day{border:2px solid var(--ink);background:#fbf8ee;padding:10px 12px;position:relative;opacity:0;transform:translateY(12px);transition:opacity .5s,transform .5s}
+.active .day{opacity:1;transform:none}
+.day h3{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--rule);padding-bottom:5px}
+.day h3 small{font-family:var(--body);font-size:12px;color:var(--ink2)}
+.day ul{list-style:none;display:grid;gap:5px;font-size:clamp(11px,1vw,13px);line-height:1.4;margin-top:6px}
+.day li::before{content:"\25AA  ";color:var(--stamp)}
+.day .mile{margin-top:8px;font-family:var(--type);font-size:12px;color:var(--ok)}
+.bars{display:grid;gap:6px}
+.bars div{display:grid;grid-template-columns:150px 1fr 60px;gap:8px;align-items:center;font-size:clamp(11px,1vw,13px)}
+.bars i{display:block;height:14px;background:var(--stamp);transform-origin:left;transform:scaleX(0);transition:transform 1.1s cubic-bezier(.2,.7,.3,1)}
+.active .bars i{transform:scaleX(1)}
+.bars i.ok{background:var(--ok)}.bars i.blue{background:var(--blue)}.bars i.grey{background:#9b917a}
+.person{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center;border:1px solid var(--rule);background:#fbf8ee;padding:12px}
+.person img{width:clamp(72px,8vw,110px);height:clamp(72px,8vw,110px);object-fit:cover;border:3px solid #fff;box-shadow:0 4px 10px rgba(0,0,0,.25);transform:rotate(-2deg)}
+.person b{font-family:var(--type);font-weight:400;font-size:clamp(16px,1.6vw,22px);display:block}
+.ba{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:stretch}
+.ba>div{border:2px dashed var(--rule);background:#fbf8ee;padding:10px 12px}
+.ba>div.after{border:2px solid var(--ok)}
+.ba>i{align-self:center;font-style:normal;font-family:var(--type);font-size:28px;color:var(--stamp)}
+.hint{position:absolute;bottom:clamp(60px,9vh,96px);left:0;right:0;text-align:center;color:var(--ink2);font-family:var(--type);font-size:14px;animation:sway 1.6s ease-in-out infinite;transition:opacity .4s;pointer-events:none}
+.hint.gone{opacity:0}
+@keyframes sway{0%,100%{transform:translateX(-6px)}50%{transform:translateX(6px)}}
+/* navigation */
+.nav{position:fixed;top:50%;transform:translateY(-50%);width:48px;height:48px;border-radius:50%;border:2px solid var(--ink);background:var(--paper);color:var(--ink);font-family:var(--type);font-size:30px;line-height:1;display:grid;place-items:center;cursor:pointer;user-select:none;z-index:10;transition:opacity .3s,background .2s;box-shadow:0 4px 12px rgba(60,45,20,.3)}
+.nav:hover{background:var(--ink);color:var(--paper)}
+.nav.prev{left:10px}.nav.next{right:10px}.nav.hidden{opacity:0;pointer-events:none}
+.home{position:fixed;left:14px;bottom:28px;height:30px;padding:0 12px;border-radius:15px;border:2px solid var(--ink);background:var(--paper);color:var(--ink);font-family:var(--type);font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;z-index:11;box-shadow:0 3px 8px rgba(60,45,20,.3)}
+.home:hover{background:var(--ink);color:var(--paper)}
+.home svg{width:15px;height:15px}
+.progress{position:fixed;left:0;bottom:0;height:22px;width:100%;background:var(--paper);border-top:2px solid var(--ink);z-index:10;background-image:repeating-linear-gradient(90deg,var(--ink) 0 1px,transparent 1px calc(100%/72)),repeating-linear-gradient(90deg,var(--ink) 0 2px,transparent 2px calc(100%/36));background-size:100% 7px,100% 13px;background-repeat:no-repeat}
+.progress i{position:absolute;left:0;bottom:0;height:8px;width:0;background:var(--stamp);transition:width .45s}
+.counter{position:fixed;right:68px;bottom:28px;font-family:var(--type);font-size:13px;color:var(--ink);z-index:10;background:var(--paper);padding:2px 8px;border:1px solid var(--ink)}
+@media (max-width:1100px){
+  .grid,.two,.three,.frames{grid-template-columns:1fr}
+  .days{grid-template-columns:1fr 1fr}
+}
+@media (max-width:760px){
+  .slide{padding:8px 8px 58px}
+  .page{padding:12px 12px 70px;-webkit-overflow-scrolling:touch}
+  .filehead{flex-direction:column;align-items:stretch;gap:6px}
+  .tabs{overflow-x:auto;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .notes{flex-direction:row;overflow-x:auto;padding-bottom:6px}
+  .note{flex:0 0 240px}
+  .pin,.clip{display:none}
+  .exhibit{transform:none}
+  .tape{min-height:0;padding:12px 12px 12px 26px}
+  .tape .rcvd{display:none}
+  .days{grid-template-columns:1fr}
+  .nav{top:auto;bottom:30px;transform:none;width:40px;height:40px;font-size:24px}
+  .nav.prev{left:auto;right:60px}.nav.next{right:12px}
+  .counter{right:auto;left:112px;bottom:30px}
+  .home{bottom:32px}
+  .code pre{max-height:none}
+  .bars div{grid-template-columns:100px 1fr 50px}
+  .roundstamp{display:none}
+  h1 br{display:none}
+  .ba{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+<!-- 1 Cover -->
+<section class="slide" data-sec="Intro" id="cover"><div class="page">
+  <div class="filehead"><span>Engineering Software Lab (ESL) &nbsp;|&nbsp; Case file <b>TXLA64-2026-10</b></span><span class="tabs"></span></div>
+  <div class="brand"><img src="assets/esl-logo.png" alt="ESL logo"><div class="who">Eclipse ThreadX RTOS &middot; Loongson LoongArch64 &middot; QEMU virt<br>IEC 61508-3 SC 3 process &middot; MISRA C:2025 &middot; Parasoft C/C++test</div></div>
+  <h1>From no port, no BSP, no MISRA<br>to an IEC 61508 SIL 3 release candidate,<br>in four days</h1>
+  <p class="sub">A technical walk through the port of Eclipse ThreadX 6.5.2 to the Loongson LoongArch64 architecture: low-level assembly, the QEMU <code>virt</code> board support package, the upstream regression suite on QEMU, MISRA C:2025 with Parasoft C/C++test, structural coverage on target and the full SIL 3 evidence trail. Every code sample is real source from the tagged tree; every console line is real tool output.</p>
+  <div class="stamps"><span class="stamp big">v1.0.0-rc1: pre-release</span><span class="stamp blue">Real code</span><span class="stamp ok">Real tool output</span><span class="stamp warn">Not certified</span></div>
+  <p class="footnote">For software engineers and DevOps in automotive and industrial control. Source and evidence: <a href="https://github.com/zuwasi/threadx-loongarch64" target="_blank" rel="noopener">github.com/zuwasi/threadx-loongarch64</a></p>
+  <div class="hint" id="hint">&larr; swipe or use the arrow keys &rarr;</div>
+</div></section>
+
+<!-- 2 Project intro -->
+<section class="slide" data-sec="Intro"><div class="page">
+  <div class="filehead"><span>Summary of case &nbsp;|&nbsp; <b>what was delivered</b></span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>The project in one page</h2></div>
+  <p class="sub">Eclipse ThreadX had no LoongArch port. ESL wrote one, plus a BSP for QEMU's LoongArch <code>virt</code> machine, and produced the IEC 61508-3 work products a SIL 3 assessment expects, with ThreadX itself kept unmodified as a pinned submodule.</p>
+  <div class="kpis">
+    <div class="kpi ok"><b>576/576</b><span>upstream ThreadX regression tests, 96 tests &times; 6 kernel configurations on QEMU</span></div>
+    <div class="kpi ok"><b>7/7</b><span>bring-up and demo images, Debug and Release, in CI</span></div>
+    <div class="kpi red"><b>143 &rarr; 0</b><span>MISRA C:2025 findings in ESL port and BSP code</span></div>
+    <div class="kpi blue"><b>15</b><span>deviation records, each with risk analysis and compensating measures</span></div>
+    <div class="kpi ok"><b>92%</b><span>line coverage of port and BSP C code, every gap justified</span></div>
+    <div class="kpi warn"><b>4 days</b><span>19 Oct 17:24 first commit &rarr; 22 Oct tag <code>v1.0.0-rc1</code></span></div>
+  </div>
+  <div class="two">
+    <div class="list">
+      <div><span><b>Port</b> (<code>ports/loongarch64/gnu/</code>): 7 assembly files and 3 C files: context save and restore with full integer and FP state, scheduler, atomic interrupt posture, stack build, tick, freestanding <code>memcpy</code>/<code>memmove</code>/<code>memset</code>/<code>memcmp</code>.</span></div>
+      <div><span><b>BSP</b> (<code>bsp/qemu_virt/</code>): reset entry, linker script with a stack guard, constant timer, NS16550 UART with interrupt-driven receive through PCH-PIC and EXTIOI, fatal handler.</span></div>
+    </div>
+    <div class="list">
+      <div><span><b>Evidence</b>: safety plan, 19 requirements, design, compiler behaviour (Dir 1.1), tool classification, verification plan and report, generated traceability, safety manual, MISRA GEP/GRP, compliance summary, dashboard.</span></div>
+      <div><span><b>Status</b>: release candidate. Approvals, independent reviews, statement/branch/MC/DC coverage and real silicon are open, and are listed as open.</span></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 3 TOC -->
+<section class="slide" data-sec="Intro" id="toc"><div class="page">
+  <div class="filehead"><span>Index to the file &nbsp;|&nbsp; <b>table of contents</b></span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>Table of contents</h2></div>
+  <p class="footnote">The tabs at the top of every slide are this index; the Home button returns here.</p>
+  <div class="toc">
+    <a data-goto="esl"><em>01</em><b>Who are ESL</b><span>PX5 and RTOSX partner in Israel, ThreadX, ISO 26262 and MISRA experts</span></a>
+    <a data-goto="loongson"><em>02</em><b>The Loongson device</b><span>LoongArch, how it forked from MIPS, where it is used</span></a>
+    <a data-goto="standards"><em>03</em><b>Two decisions</b><span>Why the RISC-V64 port and not MIPS; why IEC 61508 SIL 3, and the ASIL mapping</span></a>
+    <a data-goto="port"><em>04</em><b>The porting process</b><span><code>tx_port.h</code>, context frames, vector entry, why assembly matters, two real defects</span></a>
+    <a data-goto="bsp"><em>05</em><b>BSP and QEMU validation</b><span>Startup, interrupt route, run harness, 576/576 regression, CI</span></a>
+    <a data-goto="misra"><em>06</em><b>MISRA C:2025 with Parasoft</b><span>Plan, analysis, dashboard, 143 &rarr; 0, deviations, kernel gap, Klocwork mapping</span></a>
+    <a data-goto="coverage"><em>07</em><b>Structural coverage</b><span>Why SIL 3 needs it, Parasoft on target over UART, results and gaps</span></a>
+    <a data-goto="timeline"><em>08</em><b>Timeline and status</b><span>Four days, hour by hour; what is still open; reproduce it</span></a>
+  </div>
+</div></section>
+
+<!-- 4 ESL -->
+<section class="slide" data-sec="ESL" id="esl"><div class="page">
+  <div class="filehead"><span>Party to the case &nbsp;|&nbsp; <b>Engineering Software Lab</b></span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>Who are ESL</h2></div>
+  <div class="grid">
+    <div style="display:grid;gap:14px">
+      <div class="brand"><a href="https://eswlab.com/" target="_blank" rel="noopener"><img src="assets/esl-logo.png" alt="ESL, Engineering Software Lab"></a><div class="who">Engineering Software Lab (ESL), Israel<br>Embedded software consultancy: optimizing, migrating and certifying embedded projects</div></div>
+      <div class="list">
+        <div><span><b>RTOS experts.</b> ESL is the Israeli partner of <b>PX5</b> (PX5 RTOS) and <b>RTOSX</b> (the industrial-grade, ThreadX API-compatible kernel and middleware, and professional ThreadX support).</span></div>
+        <div><span><b>Eclipse ThreadX</b>, the open-source MIT RTOS: ports, migrations (ThreadX 5 to 6, Cortex-M4 to M85), BSPs and long-term maintenance.</span></div>
+        <div><span><b>Functional safety:</b> ISO 26262 (ASIL A to D) and IEC 61508 process, safety plans, deviation and tool qualification evidence.</span></div>
+        <div><span><b>MISRA C and C++</b> coding standards: enforcement plans, re-categorization, deviation records, compliance reporting.</span></div>
+        <div><span><b>Parasoft and Perforce partner in Israel for over 20 years</b>: C/C++test, Klocwork, Helix; tool configuration and qualification.</span></div>
+      </div>
+    </div>
+    <div style="display:grid;gap:12px">
+      <div class="person"><a href="https://www.linkedin.com/in/liezrowice/" target="_blank" rel="noopener"><img src="assets/daniel-liezrowice.jpg" alt="Daniel Liezrowice"></a><div><b>Daniel Liezrowice</b><span class="footnote">CTO, ESL. Has used ThreadX for over 25 years. Safety manager of this project.</span><br><a class="footnote" href="https://www.linkedin.com/in/liezrowice/" target="_blank" rel="noopener">LinkedIn profile</a></div></div>
+      <div class="note ok" style="opacity:1;transform:none"><i class="k">!</i><div><b>Why this deck exists</b><span>To show, with executable evidence, what a ThreadX port to a new ISA with a SIL 3 evidence trail really involves, and how long it takes when the process is set up first.</span></div></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 5 PX5 / RTOSX -->
+<section class="slide" data-sec="ESL"><div class="page">
+  <div class="filehead"><span>Partners &nbsp;|&nbsp; <b>PX5 and RTOSX</b></span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>Open-source ThreadX here; a certified path when you need one</h2></div>
+  <div class="two">
+    <div>
+      <h3>PX5 RTOS</h3>
+      <div class="list">
+        <div><span>Fifth-generation RTOS with a native POSIX pthreads API; two source files (<code>px5.c</code>, <code>px5_binding.s</code>).</span></div>
+        <div><span>Certified by SGS-T&Uuml;V Saar: <b>IEC 61508 SIL 4, ISO 26262 ASIL D</b>, IEC 62304 Class C, EN 50128 SW-SIL 4.</span></div>
+        <div><span>Pointer/data verification (PDV); 100% statement and branch decision coverage.</span></div>
+      </div>
+      <p class="footnote"><a href="https://px5rtos.com/" target="_blank" rel="noopener">px5rtos.com</a></p>
+    </div>
+    <div>
+      <h3>RTOSX</h3>
+      <div class="list">
+        <div><span><b>RTOSX KERNEL</b>: an industrial-grade alternative to Eclipse ThreadX built with PX5 technology, <b>fully API-compatible with ThreadX applications</b>, under 3 KB flash and RAM.</span></div>
+        <div><span>Meets IEC 61508 SIL 4 and ISO 26262 ASIL D; RTOSX FILE, NET and USB replace FileX, NetX Duo and USBX.</span></div>
+        <div><span>ThreadX professional support and Extended Long-Term Support (ELS) for specific ThreadX versions.</span></div>
+      </div>
+      <p class="footnote"><a href="https://rtosx.com/solutions/" target="_blank" rel="noopener">rtosx.com/solutions</a></p>
+    </div>
+  </div>
+  <div class="note blue" style="opacity:1;transform:none"><i class="k">i</i><div><b>How this project relates</b><span>This port targets <b>open-source Eclipse ThreadX</b> (MIT) and carries no certificate. Applications written against the ThreadX API on LoongArch keep a migration path to a certified, API-compatible kernel (RTOSX) when a product needs a certificate rather than a process evidence package.</span></div></div>
+</div></section>
+
+<!-- 6 Loongson -->
+<section class="slide" data-sec="Loongson" id="loongson"><div class="page">
+  <div class="filehead"><span>Exhibit <b>L-1</b> &nbsp;|&nbsp; the target device</span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>Loongson and LoongArch: a domestic CPU line with its own ISA</h2></div>
+  <div class="grid">
+    <div class="tw"><table class="form">
+      <thead><tr><th>Period</th><th>ISA</th><th>Typical parts</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr class="row" style="transition-delay:.1s"><td>2001 to 2020</td><td>MIPS64-compatible plus Loongson extensions</td><td>Godson/Loongson 1, 2E/2F, 3A1000 to 3A4000 (GS464 cores)</td><td>Origin at the Institute of Computing Technology, Chinese Academy of Sciences</td></tr>
+        <tr class="row" style="transition-delay:.3s"><td>2020 to 2021</td><td><b>LoongArch</b> announced</td><td>3A5000 (LA464 core), 3C5000 server</td><td>Own ISA; MIPS binaries no longer run natively</td></tr>
+        <tr class="row" style="transition-delay:.5s"><td>2023 onward</td><td>LoongArch64 (LA64)</td><td>3A6000 (LA664), 2K-series SoCs (2K0500, 2K1000LA, 2K2000)</td><td>Desktop, server and embedded/industrial SoCs</td></tr>
+        <tr class="row" style="transition-delay:.7s"><td>Small MCUs</td><td>LoongArch32 (reduced)</td><td>1C-series controllers</td><td>Low-end control and IoT</td></tr>
+      </tbody>
+    </table></div>
+    <div class="notes">
+      <div class="note" style="transition-delay:.3s"><i class="k">1</i><div><b>What it is used for</b><span>China's domestic computing programme (PCs, servers), and above all industrial control, power-grid automation and protection, rail transit, telecom equipment and other infrastructure where a locally controlled CPU is a requirement.</span></div></div>
+      <div class="note blue" style="transition-delay:.6s"><i class="k">2</i><div><b>Mainline ecosystem</b><span>LoongArch is upstream in GCC (from 12), binutils, the Linux kernel (from 5.19), glibc and QEMU (from 7.1). We use GCC 14.2 and QEMU 8.2.2 from Ubuntu 24.04.</span></div></div>
+      <div class="note ok" style="transition-delay:.9s"><i class="k">3</i><div><b>Our target</b><span><code>qemu-system-loongarch64 -M virt -cpu la464</code>: the LA464 core of the 3A5000 class, PLV0, LP64D ABI, FPU on, LSX/LASX vector units off.</span></div></div>
+    </div>
+  </div>
+  <p class="footnote">The application domain (industrial control and energy) is what drives the choice of safety standard two sections later.</p>
+</div></section>
+
+<!-- 7 LoongArch vs MIPS -->
+<section class="slide" data-sec="Loongson"><div class="page">
+  <div class="filehead"><span>Exhibit <b>L-2</b> &nbsp;|&nbsp; the fork from MIPS</span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>LoongArch looks like MIPS and is not MIPS</h2></div>
+  <p class="sub" style="max-width:none">Loongson kept the RISC philosophy and the 32-register load/store model, then redesigned everything a kernel porter touches. A MIPS port would not even assemble.</p>
+  <div class="tw"><table class="form tight">
+    <thead><tr><th>Concern</th><th>Classic MIPS64</th><th>LoongArch64</th><th>Impact on the ThreadX port</th></tr></thead>
+    <tbody>
+      <tr class="row" style="transition-delay:.05s"><td>Branch delay slot</td><td>Yes</td><td class="hl">None</td><td>No delay-slot scheduling in hand-written assembly</td></tr>
+      <tr class="row" style="transition-delay:.15s"><td>Privileged state</td><td>CP0 registers, <code>mfc0</code>/<code>mtc0</code></td><td class="hl">CSRs, <code>csrrd</code>/<code>csrwr</code>/<code>csrxchg</code></td><td><code>csrxchg</code> gives an atomic masked write: interrupt posture in one instruction</td></tr>
+      <tr class="row" style="transition-delay:.25s"><td>Interrupt enable and mode</td><td>Status.IE, EXL, KSU</td><td class="hl">CRMD.IE, PLV; PRMD saves the previous state</td><td>Saved PRMD is part of every interrupt frame</td></tr>
+      <tr class="row" style="transition-delay:.35s"><td>Exception entry and return</td><td>EBASE vectors, EPC, <code>eret</code></td><td class="hl">EENTRY base, ERA, <code>ertn</code></td><td>One 4 KiB-aligned vector; restore ends in <code>ertn</code></td></tr>
+      <tr class="row" style="transition-delay:.45s"><td>Cause decoding</td><td>Cause.ExcCode, Cause.IP[7:0]</td><td class="hl">ESTAT.Ecode, ESTAT.IS[12:0] (timer = IS[11])</td><td>Vector decodes Ecode, IS[2] (external) and IS[11] (timer)</td></tr>
+      <tr class="row" style="transition-delay:.55s"><td>Timer</td><td>CP0 Count/Compare</td><td class="hl">Constant timer CSRs TCFG, TVAL, TICLR</td><td>Periodic tick from CPUCFG-derived frequency</td></tr>
+      <tr class="row" style="transition-delay:.65s"><td>Interrupt controllers</td><td>Board-specific</td><td class="hl">IOCSR space (EXTIOI) plus PCH-PIC MMIO</td><td>IOCSR accessors in assembly (<code>iocsrrd.w</code>/<code>iocsrwr.w</code>)</td></tr>
+      <tr class="row" style="transition-delay:.75s"><td>Multiply/divide</td><td>HI/LO registers</td><td class="hl">Results in GPRs</td><td>No HI/LO in the context frame</td></tr>
+      <tr class="row" style="transition-delay:.85s"><td>FP condition</td><td>FCSR condition bits</td><td class="hl">8 separate FCC registers <code>fcc0</code>-<code>fcc7</code></td><td>FCC0-7 saved in the interrupt frame</td></tr>
+      <tr class="row" style="transition-delay:.95s"><td>Address model</td><td>Fixed kseg0/kseg1</td><td class="hl">Direct-address mode, DMW windows, paging</td><td>BSP runs in direct-address mode at PLV0</td></tr>
+      <tr class="row" style="transition-delay:1.05s"><td>Extensions</td><td>MSA</td><td class="hl">LSX 128-bit, LASX 256-bit, LBT binary translation, LVZ</td><td>Port refuses <code>-msimd</code>: vector state is not saved</td></tr>
+    </tbody>
+  </table></div>
+</div></section>
+
+<!-- 8 LoongArch for porter -->
+<section class="slide" data-sec="Loongson"><div class="page">
+  <div class="filehead"><span>Exhibit <b>L-3</b> &nbsp;|&nbsp; ABI and CSRs the port uses</span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>The LP64D ABI and CSR map, as the port sees them</h2></div>
+  <div class="two">
+    <div class="tw"><table class="form tight">
+      <thead><tr><th>Registers</th><th>ABI name</th><th>Role in a context switch</th></tr></thead>
+      <tbody>
+        <tr><td><code>$r0</code></td><td>zero</td><td>Hard-wired zero</td></tr>
+        <tr><td><code>$r1</code> / <code>$r3</code></td><td>ra / sp</td><td>Saved in both frame types</td></tr>
+        <tr><td><code>$r2</code></td><td>tp</td><td>Saved (interrupt frame)</td></tr>
+        <tr><td><code>$r4</code>-<code>$r11</code></td><td>a0-a7</td><td>Caller-saved: interrupt frame only</td></tr>
+        <tr><td><code>$r12</code>-<code>$r20</code></td><td>t0-t8</td><td>Caller-saved: interrupt frame only</td></tr>
+        <tr><td><code>$r21</code></td><td>reserved</td><td>Saved (interrupt frame)</td></tr>
+        <tr><td><code>$r22</code>-<code>$r31</code></td><td>fp, s0-s8</td><td class="hl">Callee-saved: also in the 192-byte solicited frame</td></tr>
+        <tr><td><code>$f24</code>-<code>$f31</code></td><td>fs0-fs7</td><td class="hl">Callee-saved FP: solicited frame</td></tr>
+        <tr><td><code>$f0</code>-<code>$f23</code>, FCSR0, FCC0-7</td><td>fa/ft</td><td>Interrupt frame only</td></tr>
+      </tbody>
+    </table></div>
+    <div class="code"><div class="bar"><i></i><i></i><i></i><span>ports/loongarch64/gnu/inc/tx_port.h</span></div><pre data-lang="c">/* LoongArch control and status register numbers used by the port.  */
+#define TX_LA64_CSR_CRMD     0x0     /* Current mode            */
+#define TX_LA64_CSR_PRMD     0x1     /* Pre-exception mode      */
+#define TX_LA64_CSR_EUEN     0x2     /* Extended unit enable    */
+#define TX_LA64_CSR_ECFG     0x4     /* Exception configuration */
+#define TX_LA64_CSR_ESTAT    0x5     /* Exception status        */
+#define TX_LA64_CSR_ERA      0x6     /* Exception return addr   */
+#define TX_LA64_CSR_EENTRY   0xC     /* Exception entry base    */
+#define TX_LA64_CSR_SAVE0    0x30    /* Scratch 0               */
+#define TX_LA64_CSR_TCFG     0x41    /* Timer configuration     */
+#define TX_LA64_CSR_TVAL     0x42    /* Timer value             */
+#define TX_LA64_CSR_TICLR    0x44    /* Timer interrupt clear   */
+
+/* CRMD.IE is bit 2.  The interrupt posture saved by TX_DISABLE is the
+   previous value of this bit only.  */
+#define TX_LA64_CRMD_IE      0x4
+
+#if defined(__loongarch_sx) || defined(__loongarch_asx)
+#error "The ThreadX LoongArch64 port does not preserve LSX/LASX state. Build with -msimd=none."
+#endif</pre></div>
+  </div>
+</div></section>
+
+<!-- 9 Why RISC-V -->
+<section class="slide" data-sec="Standards" id="standards"><div class="page">
+  <div class="filehead"><span>Decision record <b>D-1</b> &nbsp;|&nbsp; which upstream port to derive from</span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>Why we started from the RISC-V64 port, not a MIPS port</h2></div>
+  <div class="grid" style="grid-template-columns:.9fr 1.1fr">
+    <div class="tape" data-type><span class="stamp rcvd">Checked</span><span class="p">$ </span>git -C external/threadx describe --tags
+v6.5.2.202603_rel
+<span class="p">$ </span>ls external/threadx/ports | wc -l
+49
+<span class="p">$ </span>ls external/threadx/ports | grep -i -E "mips|risc"
+<span class="g">risc-v32</span>
+<span class="g">risc-v64</span>
+<span class="g">risc-v_common</span>
+<span class="m"># no MIPS port in the open-source tree</span>
+<span class="p">$ </span>head -6 ports/loongarch64/gnu/inc/tx_port.h
+ * Copyright (c) 2026 Engineering Software Lab Israel (ESL)
+ *
+ * <span class="h">Derived from the Eclipse ThreadX RISC-V64/GNU port:</span>
+ * Copyright (c) 2024 Microsoft Corporation</div>
+    <div class="tw"><table class="form tight">
+      <thead><tr><th>Port concern</th><th>RISC-V64 (upstream)</th><th>LoongArch64 (ours)</th></tr></thead>
+      <tbody>
+        <tr class="row" style="transition-delay:.1s"><td>Data model</td><td>LP64, ULONG 32-bit</td><td>LP64D, ULONG 32-bit</td></tr>
+        <tr class="row" style="transition-delay:.2s"><td>Callee-saved GPR / FPR</td><td>s0-s11 / fs0-fs11</td><td><code>$r22</code>-<code>$r31</code> / <code>$f24</code>-<code>$f31</code></td></tr>
+        <tr class="row" style="transition-delay:.3s"><td>CSR access</td><td><code>csrr</code>, <code>csrw</code>, <code>csrrc</code></td><td><code>csrrd</code>, <code>csrwr</code>, <code>csrxchg</code></td></tr>
+        <tr class="row" style="transition-delay:.4s"><td>Interrupt enable / previous</td><td>mstatus.MIE / MPIE</td><td>CRMD.IE / PRMD.PIE</td></tr>
+        <tr class="row" style="transition-delay:.5s"><td>Trap vector / return</td><td>mtvec / mepc + <code>mret</code></td><td>EENTRY / ERA + <code>ertn</code></td></tr>
+        <tr class="row" style="transition-delay:.6s"><td>Cause</td><td>mcause</td><td>ESTAT (Ecode, IS)</td></tr>
+        <tr class="row" style="transition-delay:.7s"><td>Wait for interrupt</td><td><code>wfi</code></td><td><code>idle 0</code></td></tr>
+        <tr class="row" style="transition-delay:.8s"><td>Idle-loop interrupt handling</td><td><code>_tx_thread_idle_system_save</code></td><td>Same behaviour in <code>_tx_thread_context_save</code> (PR-M4-001)</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+  <div class="list">
+    <div><span><b>Availability:</b> the open-source tree has no MIPS port to start from, and MIPS would be the wrong model anyway: CP0, delay slots and <code>eret</code> do not exist on LoongArch.</span></div>
+    <div><span><b>Shape:</b> RISC-V64 is a maintained 64-bit port with the same LP64 kernel data model, 32 GPRs, a CSR-based trap model and a similar callee-saved split. The structure maps one-to-one; only instruction encodings and CSR semantics change.</span></div>
+  </div>
+</div></section>
+
+<!-- 10 Why IEC 61508 SIL 3 -->
+<section class="slide" data-sec="Standards"><div class="page">
+  <div class="filehead"><span>Decision record <b>D-2</b> &nbsp;|&nbsp; which safety standard</span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>Why IEC 61508, and why systematic capability 3</h2></div>
+  <div class="two">
+    <div class="notes">
+      <div class="note" style="transition-delay:.2s"><i class="k">1</i><div><b>The device's market is industrial</b><span>Loongson SoCs go into industrial control, energy, rail and infrastructure. Those sectors are governed by IEC 61508 or by its sector standards: IEC 61511 (process), EN 50716/EN 50128 (rail), IEC 62061 and ISO 13849 (machinery), IEC 61513 (nuclear).</span></div></div>
+      <div class="note blue" style="transition-delay:.5s"><i class="k">2</i><div><b>IEC 61508 is the mother standard</b><span>It is application-independent, so it fits a reusable RTOS element that has no vehicle or plant context. ISO 26262 itself is the automotive adaptation of IEC 61508.</span></div></div>
+      <div class="note ok" style="transition-delay:.8s"><i class="k">3</i><div><b>Route 1S for the port, compliant item for reuse</b><span>The port and BSP are developed to IEC 61508-3 (route 1S). The integrator gets a safety manual (IEC 61508-3 Annex D) with the assumptions of use, which is exactly what a safety element out of context needs.</span></div></div>
+      <div class="note warn" style="transition-delay:1.1s"><i class="k">4</i><div><b>SC 3, not SC 4</b><span>SIL 3 is the highest level that is normally achieved by a single-channel software element without diverse redundancy, and it is the rigor that automotive teams know as ASIL D. SIL 4 is rare outside rail and nuclear and is usually reached with diversity at system level.</span></div></div>
+    </div>
+    <div>
+      <div class="tw"><table class="form tight">
+        <thead><tr><th>SIL</th><th>High demand / continuous: PFH (per hour)</th><th>Low demand: PFD<sub>avg</sub></th></tr></thead>
+        <tbody>
+          <tr><td>SIL 4</td><td>10<sup>-9</sup> to &lt; 10<sup>-8</sup></td><td>10<sup>-5</sup> to &lt; 10<sup>-4</sup></td></tr>
+          <tr><td class="hl">SIL 3</td><td class="hl">10<sup>-8</sup> to &lt; 10<sup>-7</sup></td><td class="hl">10<sup>-4</sup> to &lt; 10<sup>-3</sup></td></tr>
+          <tr><td>SIL 2</td><td>10<sup>-7</sup> to &lt; 10<sup>-6</sup></td><td>10<sup>-3</sup> to &lt; 10<sup>-2</sup></td></tr>
+          <tr><td>SIL 1</td><td>10<sup>-6</sup> to &lt; 10<sup>-5</sup></td><td>10<sup>-2</sup> to &lt; 10<sup>-1</sup></td></tr>
+        </tbody>
+      </table></div>
+      <p class="footnote" style="margin-top:8px">Software has no failure rate. For software, a SIL is reached as a <b>systematic capability</b> (SC): the techniques and measures of IEC 61508-3 Annexes A and B, applied at the rigor the tables mark HR (highly recommended) for that SIL. That is why the project is "SC 3 process", not "a SIL 3 number".</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- 11 SIL vs ASIL -->
+<section class="slide" data-sec="Standards"><div class="page">
+  <div class="filehead"><span>Decision record <b>D-3</b> &nbsp;|&nbsp; for ISO 26262 readers</span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>SIL 3 in ASIL terms, and what transfers to ISO 26262</h2></div>
+  <div class="two">
+    <div>
+      <div class="tw"><table class="form tight">
+        <thead><tr><th>IEC 61508</th><th>ISO 26262 (approximate rigor)</th></tr></thead>
+        <tbody>
+          <tr><td>SIL 4</td><td>No automotive counterpart</td></tr>
+          <tr><td class="hl">SIL 3</td><td class="hl">ASIL D (and C)</td></tr>
+          <tr><td>SIL 2</td><td>ASIL B / C</td></tr>
+          <tr><td>SIL 1</td><td>ASIL A</td></tr>
+          <tr><td>No SIL</td><td>QM</td></tr>
+        </tbody>
+      </table></div>
+      <p class="footnote" style="margin-top:6px">There is no normative equivalence: a SIL comes from risk reduction, an ASIL from severity, exposure and controllability. The mapping is the common engineering reading of the two method tables.</p>
+    </div>
+    <div class="tw"><table class="form tight">
+      <thead><tr><th>Measure</th><th>IEC 61508-3, SC 3</th><th>ISO 26262-6/-8, ASIL D</th></tr></thead>
+      <tbody>
+        <tr><td>Coding standard</td><td>Tables A.3 (language subset), A.4 and B.1 (coding standard): HR</td><td>Part 6 Table 1: ++ (MISRA C named)</td></tr>
+        <tr><td>Static analysis</td><td>Table A.9/B.8: HR</td><td>Part 6 Table 7: ++</td></tr>
+        <tr><td>Statement coverage</td><td>Table B.2: HR</td><td>Part 6 Table 9: + (++ at A/B)</td></tr>
+        <tr><td>Branch coverage</td><td>Table B.2: HR</td><td>Part 6 Table 9: ++</td></tr>
+        <tr><td>MC/DC</td><td>Table B.2: R (HR at SIL 4)</td><td>Part 6 Table 9: ++</td></tr>
+        <tr><td>Tool confidence</td><td>7.4.4: T1/T2/T3</td><td>Part 8 cl. 11: TCL1-3</td></tr>
+        <tr><td>Reused component</td><td>7.4.2.12: route 1S/2S/3S</td><td>Part 8 cl. 12, Part 10 SEooC</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+  <div class="list">
+    <div><span><b>Transfers directly:</b> requirements with traceability, design, MISRA C:2025 reports and deviation records, the compiler behaviour record, tool classification and validation, regression and coverage evidence, the safety manual as the SEooC assumptions of use.</span></div>
+    <div><span><b>Must be added for ASIL D:</b> MC/DC (++), TCL evaluation per ISO 26262-8 clause 11 (TI/TD), and the item-level hazard analysis and freedom-from-interference argument, which no RTOS element can provide on its own.</span></div>
+  </div>
+</div></section>
+
+<!-- 12 Architecture / process -->
+<section class="slide" data-sec="Port" id="port"><div class="page">
+  <div class="filehead"><span>Procedure <b>P-1</b> &nbsp;|&nbsp; architecture and milestones</span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>Three layers, eight milestones, one rule: never touch the kernel</h2></div>
+  <div class="tw"><table class="form tight">
+    <thead><tr><th>Layer</th><th>Location</th><th>Language</th><th>Content</th></tr></thead>
+    <tbody>
+      <tr><td>Port</td><td><code>ports/loongarch64/gnu/</code></td><td>Assembly, C99</td><td>Context save/restore, scheduler, interrupt posture, stack build, low-level init, tick, memory functions</td></tr>
+      <tr><td>BSP</td><td><code>bsp/qemu_virt/</code></td><td>Assembly, C99</td><td>Reset entry, linker script, timer, UART, external interrupt route, fatal handler, test exit</td></tr>
+      <tr><td>Kernel</td><td><code>external/threadx/</code> at <code>v6.5.2.202603_rel</code></td><td>C</td><td>Eclipse ThreadX, pinned submodule, <b>not modified</b></td></tr>
+    </tbody>
+  </table></div>
+  <div class="flow">
+    <div class="st done"><b>M0-M1</b>Freestanding build, <code>tx_port.h</code>, GEP, safety plan</div>
+    <div class="st done"><b>M2</b>BSP on QEMU, bring-up tests</div>
+    <div class="st done"><b>M3</b>Port: context, scheduler, 8-thread demo</div>
+    <div class="st done"><b>M4</b>Upstream regression, 6 configs</div>
+    <div class="st done"><b>M5</b>MISRA C:2025, deviations</div>
+    <div class="st done"><b>M6</b>Unit tests, UART RX IRQ, coverage</div>
+    <div class="st done"><b>M7</b>Kernel gap analysis</div>
+    <div class="st open"><b>M8</b>Release: rc1 tagged; approvals open</div>
+  </div>
+  <div class="list">
+    <div><span><b>Interfaces:</b> kernel to port through the macros and functions of <code>tx_port.h</code>; port to BSP through <code>bsp.h</code>. Every CSR and IOCSR access is in assembly, so C contains no inline assembly (MISRA C:2025 Dir 4.3).</span></div>
+    <div><span><b>Process first:</b> the safety plan, requirements and MISRA enforcement plan were committed in the first hour, before any port code, so every later file was written against them.</span></div>
+  </div>
+</div></section>
+
+<!-- 13 tx_port.h -->
+<section class="slide" data-sec="Port"><div class="page">
+  <div class="filehead"><span>Exhibit <b>P-2</b> &nbsp;|&nbsp; the kernel-to-port contract</span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2><code>tx_port.h</code>: data model and interrupt lockout</h2></div>
+  <div class="grid">
+    <div class="code"><div class="bar"><i></i><i></i><i></i><span>ports/loongarch64/gnu/inc/tx_port.h (excerpt)</span></div><pre data-lang="c">/* LONG and ULONG are 32-bit, as on every other ThreadX 64-bit port.  The
+   kernel control-block layouts and queue message sizes depend on it.  Use
+   ULONG64 for 64-bit quantities.  */
+typedef int                 LONG;   /* parasoft-suppress MISRAC2025-DIR_4_6-a "DEV-003" */
+typedef unsigned int        ULONG;  /* parasoft-suppress MISRAC2025-DIR_4_6-a "DEV-003" */
+typedef unsigned long long  ULONG64;
+typedef unsigned long long  ALIGN_TYPE;
+typedef char tx_la64_pointer_width_check[(sizeof(VOID *) == 8U) ? 1 : -1];
+
+/* ULONG is 32-bit but pointers are 64-bit, so the thread pointer for a
+   timeout is kept in a pointer-sized timer extension field.  */
+#define TX_TIMER_INTERNAL_EXTENSION   VOID *tx_timer_internal_extension_ptr;
+
+/* Interrupt lockout and restore.  All CSR access is done in assembly
+   (tx_thread_interrupt_control.S), so no inline assembly appears in C code
+   (MISRA C:2025 Directive 4.3).  */
+UINT _tx_thread_interrupt_control(UINT new_posture);
+
+#define TX_INTERRUPT_SAVE_AREA   UINT interrupt_save;
+#define TX_DISABLE   interrupt_save =  _tx_thread_interrupt_control(TX_INT_DISABLE);
+#define TX_RESTORE   (VOID) _tx_thread_interrupt_control(interrupt_save);</pre></div>
+    <div class="notes">
+      <div class="note" style="transition-delay:.3s"><i class="k">1</i><div><b>32-bit ULONG on a 64-bit CPU</b><span>ThreadX control blocks and queue message sizes assume it. Pointers that do not fit go into extension fields; a compile-time array-size check fails the build if <code>VOID *</code> is not 8 bytes.</span></div></div>
+      <div class="note blue" style="transition-delay:.6s"><i class="k">2</i><div><b>Runtime proof too</b><span>The bring-up image prints <code>PASS ThreadX data model (LONG/ULONG 32-bit, LP64)</code> (LA-REQ-001).</span></div></div>
+      <div class="note warn" style="transition-delay:.9s"><i class="k">3</i><div><b>Suppressions name a deviation</b><span>The type names are fixed by <code>tx_api.h</code>, so Dir 4.6 is deviated once (DEV-003) and every location carries the ID. No anonymous suppressions.</span></div></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 14 Context frames -->
+<section class="slide" data-sec="Port"><div class="page">
+  <div class="filehead"><span>Exhibit <b>P-3</b> &nbsp;|&nbsp; context frame layout</span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>Two frames: 608 bytes when interrupted, 192 bytes when the thread yields</h2></div>
+  <div class="frames">
+    <div class="fr"><h4>Interrupt frame, type 1: 608 bytes</h4>
+      <div><span>+0</span><em>frame type = 1</em></div>
+      <div><span>+8 .. +248</span><em>$r1 .. $r31 (all GPRs)</em></div>
+      <div><span>+256</span><em>ERA (resume address)</em></div>
+      <div><span>+264</span><em>PRMD (previous IE, PLV)</em></div>
+      <div><span>+272 .. +520</span><em>$f0 .. $f31</em></div>
+      <div><span>+528</span><em>FCSR0</em></div>
+      <div><span>+536 ..</span><em>FCC0 .. FCC7, pad to 16-byte alignment</em></div>
+      <div><span>Built by</span><em>vector entry; <code>_tx_thread_stack_build</code> for a new thread</em></div>
+    </div>
+    <div class="fr"><h4>Solicited frame, type 0: 192 bytes</h4>
+      <div><span>+0</span><em>frame type = 0</em></div>
+      <div><span>+8 / +16</span><em>ra / sp</em></div>
+      <div><span>+24 .. +96</span><em>$r22 .. $r31 (callee-saved)</em></div>
+      <div><span>+104 .. +160</span><em>$f24 .. $f31 (callee-saved FP)</em></div>
+      <div><span>+168</span><em>FCSR0</em></div>
+      <div><span>+176</span><em>caller's CRMD posture</em></div>
+      <div><span>Built by</span><em><code>_tx_thread_system_return</code></em></div>
+      <div><span>Why smaller</span><em>a yield is a call: caller-saved state is already dead</em></div>
+    </div>
+  </div>
+  <div class="two">
+    <div class="list">
+      <div><span>The scheduler reads slot 0 and restores by type. A new thread gets an <b>interrupt</b> frame, so its first dispatch uses the same <code>ertn</code> path that every tick already tests.</span></div>
+    </div>
+    <div class="code"><div class="bar"><i></i><i></i><i></i><span>ports/loongarch64/gnu/src/tx_la64_port_assert.c</span></div><pre data-lang="c">typedef char tx_la64_thread_stack_ptr_offset_check[ /* parasoft-suppress MISRAC2025-RULE_2_3-b "DEV-010" */
+    (__builtin_offsetof(TX_THREAD, tx_thread_stack_ptr) == 8U) ? 1 : -1];
+typedef char tx_la64_context_alignment_check[ /* parasoft-suppress MISRAC2025-RULE_2_3-b "DEV-010" */
+    ((TX_LA64_CONTEXT_FRAME_SIZE % 16) == 0) ? 1 : -1];</pre></div>
+  </div>
+</div></section>
+
+<!-- 15 Vector entry -->
+<section class="slide" data-sec="Port"><div class="page">
+  <div class="filehead"><span>Exhibit <b>P-4</b> &nbsp;|&nbsp; exception vector</span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>Every interrupt enters here, with interrupts already off</h2></div>
+  <div class="grid">
+    <div class="code"><div class="bar"><i></i><i></i><i></i><span>ports/loongarch64/gnu/src/tx_thread_context_save.S</span></div><pre data-lang="asm">    .section .text.trap.port, "ax"
+    .balign 4096
+    .globl  _tx_thread_vector_entry
+_tx_thread_vector_entry:
+    /* SAVE0 preserves the interrupted stack pointer without clobbering a
+       general register.  Hardware has already cleared CRMD.IE. */
+    csrwr   $sp, TX_LA64_CSR_SAVE0
+    csrrd   $sp, TX_LA64_CSR_SAVE0
+    addi.d  $sp, $sp, -TX_LA64_CONTEXT_FRAME_SIZE
+
+    st.d    $zero, $sp, 0
+    tx_la64_save_gprs
+    csrrd   $r12, TX_LA64_CSR_ERA
+    st.d    $r12, $sp, TX_LA64_CONTEXT_ERA_OFFSET
+    csrrd   $r12, TX_LA64_CSR_PRMD
+    st.d    $r12, $sp, TX_LA64_CONTEXT_PRMD_OFFSET
+    tx_la64_save_fprs
+    li.w    $r12, TX_LA64_CONTEXT_INTERRUPT_TYPE
+    st.d    $r12, $sp, 0
+
+    csrrd   $r12, TX_LA64_CSR_ESTAT
+    srli.d  $r13, $r12, 16
+    andi    $r13, $r13, 0x3F            /* Ecode != 0: synchronous */
+    bnez    $r13, _tx_thread_vector_fatal
+    andi    $r13, $r12, 0x4             /* IS[2]: external I/O     */
+    bnez    $r13, _tx_thread_vector_external
+    andi    $r13, $r12, 0x800           /* IS[11]: timer           */
+    beqz    $r13, _tx_thread_vector_fatal
+
+    bl      bsp_timer_ack
+    bl      _tx_thread_context_save
+    bl      _tx_timer_interrupt
+    b       _tx_thread_context_restore</pre></div>
+    <div class="notes">
+      <div class="note" style="transition-delay:.3s"><i class="k">1</i><div><b>4 KiB-aligned entry</b><span>EENTRY needs page alignment; the section is placed by the linker script and installed by <code>_tx_initialize_low_level</code>.</span></div></div>
+      <div class="note blue" style="transition-delay:.6s"><i class="k">2</i><div><b>No free register on entry</b><span>The <code>csrwr</code>/<code>csrrd</code> pair through SAVE0 keeps the interrupted <code>$sp</code> while the frame is carved out.</span></div></div>
+      <div class="note warn" style="transition-delay:.9s"><i class="k">3</i><div><b>Whitelist decoding</b><span>Only Ecode 0 with IS[2] or IS[11] is serviced. Anything else, including an unexpected interrupt line, goes to the fatal handler (LA-REQ-106).</span></div></div>
+      <div class="note ok" style="transition-delay:1.2s"><i class="k">4</i><div><b>No nesting</b><span>IE stays clear until <code>ertn</code>, so stack depth is bounded and analysable (LA-REQ-009).</span></div></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 16 Why assembly matters -->
+<section class="slide" data-sec="Port"><div class="page">
+  <div class="filehead"><span>Exhibit <b>P-5</b> &nbsp;|&nbsp; atomicity lives in a few instructions</span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>Why the low-level assembly is the safety-critical part</h2></div>
+  <div class="two">
+    <div class="code"><div class="bar"><i></i><i></i><i></i><span>ports/loongarch64/gnu/src/tx_thread_interrupt_control.S</span></div><pre data-lang="asm">/* Sets CRMD.IE to the requested posture and returns the previous
+   posture.  csrxchg reads and writes CRMD in one instruction, so the
+   operation cannot be split by an interrupt.  (LA-REQ-002) */
+_tx_thread_interrupt_control:
+    li.w    $t0, TX_LA64_CRMD_IE
+    and     $a0, $a0, $t0
+    csrxchg $a0, $t0, TX_LA64_CSR_CRMD
+    and     $a0, $a0, $t0
+    jr      $ra</pre></div>
+    <div class="code"><div class="bar"><i></i><i></i><i></i><span>ports/loongarch64/gnu/src/tx_thread_system_return.S</span></div><pre data-lang="asm">_tx_thread_system_return:
+    /* Record the caller's posture for the solicited return, then lock
+       out interrupts before any bookkeeping: an interrupt taken after
+       the switch to the system stack below, while
+       _tx_thread_current_ptr still names this thread, would save a
+       system-stack frame as the thread's context (PR-M5-001).  */
+    csrrd   $r15, TX_LA64_CSR_CRMD
+    andi    $r15, $r15, 0x7
+    move    $r12, $zero
+    li.w    $r13, TX_LA64_CRMD_IE
+    csrxchg $r12, $r13, TX_LA64_CSR_CRMD
+
+    addi.d  $sp, $sp, -TX_LA64_SOLICITED_FRAME_SIZE
+    st.d    $ra, $sp, 8
+    st.d    $r22, $sp, 24     /* ... $r31, $f24 .. $f31, FCSR0 */</pre></div>
+  </div>
+  <div class="list">
+    <div><span><b>C cannot express it.</b> Which registers survive, when IE is clear, which stack is live, and the order of three stores decide whether a thread ever runs again. No compiler, MISRA checker or coverage tool sees those properties.</span></div>
+    <div><span><b>So assembly gets its own controls:</b> requirement IDs in every file header, compile-time offset checks against the real <code>TX_THREAD</code>, requirement-based tests on QEMU, 600-run parallel stress, and review against the design (IEC 61508-3 7.4.4, Dir 4.2 and 4.3).</span></div>
+  </div>
+</div></section>
+
+<!-- 17 Defects -->
+<section class="slide" data-sec="Port"><div class="page">
+  <div class="filehead"><span>Problem reports <b>PR-M4-001</b> and <b>PR-M5-001</b> &nbsp;|&nbsp; found by tests, fixed in assembly</span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>Two real port defects the process caught</h2></div>
+  <div class="two">
+    <div>
+      <h3>PR-M4-001: system stack leak in the idle loop</h3>
+      <div class="list">
+        <div><span><b>Symptom:</b> 5 of 96 regression tests passed, then hung in cleanup.</span></div>
+        <div><span><b>Cause:</b> a tick taken while the scheduler sat in <code>idle 0</code> built a 608-byte frame on the system stack that was never released. About 26 idle ticks overflowed the 16 KiB stack into <code>.bss</code>.</span></div>
+        <div><span><b>Fix:</b> when no thread was interrupted, restart on <code>_tx_thread_system_stack_ptr</code> (upstream RISC-V behaviour). Follow-up: a 256-byte guard with pattern <code>0x5AA5...</code> and a long-idle test.</span></div>
+      </div>
+    </div>
+    <div>
+      <h3>PR-M5-001: thread context captured on the system stack</h3>
+      <div class="list">
+        <div><span><b>Symptom:</b> rare timeouts; 600 runs of one test, 24 QEMU instances in parallel: <b>231 hung</b> (369/600).</span></div>
+        <div><span><b>Cause:</b> <code>_tx_thread_system_return</code> assumed IE was clear, but <code>tx_thread_relinquish</code> calls it with interrupts on. A tick between the stack switch and the scheduler saved a system-stack frame as the thread's context.</span></div>
+        <div><span><b>Fix:</b> lock interrupts with <code>csrxchg</code> before any stack change; the posture is saved in the frame. Stress: <b>600/600</b>.</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="tape" data-type style="min-height:0"><span class="stamp ok rcvd">Verified</span><span class="h">== stress: threadx_thread_wait_abort_and_isr_test x 600, 24 parallel QEMU</span>  <span class="m"># from regression.md</span>
+before fix   passed <span class="r">369/600</span>   hung 231
+after  fix   passed <span class="g">600/600</span>
+<span class="h">== bringup_relinquish_interrupts_enabled</span>   <span class="g">Passed</span>  <span class="m"># the regression test added for PR-M5-001</span></div>
+</div></section>
+
+<!-- 18 BSP startup -->
+<section class="slide" data-sec="BSP &amp; QEMU" id="bsp"><div class="page">
+  <div class="filehead"><span>Exhibit <b>B-1</b> &nbsp;|&nbsp; board support package, reset path</span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>The BSP: from reset to <code>main</code> in 30 instructions</h2></div>
+  <div class="grid">
+    <div class="code"><div class="bar"><i></i><i></i><i></i><span>bsp/qemu_virt/src/startup.S</span></div><pre data-lang="asm">_start:
+    /* Interrupts off (CRMD.IE = 0), independent of the loader state.  */
+    li.w    $t0, 0x4
+    csrxchg $zero, $t0, CSR_CRMD
+
+    la.abs  $sp, __system_stack_top
+
+    /* Clear .bss (8-byte aligned by the linker script).  */
+    la.abs  $t0, __bss_start
+    la.abs  $t1, __bss_end
+1:  bgeu    $t0, $t1, 2f
+    st.d    $zero, $t0, 0
+    addi.d  $t0, $t0, 8
+    b       1b
+2:
+    /* Fill the guard below the system stack after .bss is cleared.  */
+    la.abs  $t0, __system_stack_guard_start
+    la.abs  $t1, __system_stack_guard_end
+    li.d    $t2, 0x5AA55AA55AA55AA5
+3:  bgeu    $t0, $t1, 4f
+    st.d    $t2, $t0, 0
+    addi.d  $t0, $t0, 8
+    b       3b
+4:
+    /* Enable the FPU (EUEN.FPE) and clear FCSR0.  */
+    li.w    $t0, 0x1
+    csrxchg $t0, $t0, CSR_EUEN
+    movgr2fcsr $fcsr0, $zero
+
+    /* Until the port installs its own entry, any exception is fatal.  */
+    la.abs  $t0, bsp_default_trap
+    csrwr   $t0, CSR_EENTRY
+    bl      main</pre></div>
+    <div style="display:grid;gap:10px">
+      <div class="tw"><table class="form tight">
+        <thead><tr><th>Region (<code>link.ld</code>)</th><th>Placement</th></tr></thead>
+        <tbody>
+          <tr><td><code>.text</code></td><td>from <code>0x00200000</code>, trap entries 4 KiB aligned</td></tr>
+          <tr><td><code>.rodata</code> <code>.data</code> <code>.bss</code></td><td>after <code>.text</code>, R X / R W segments</td></tr>
+          <tr><td><code>.stack_guard</code></td><td>256 B sentinel, <code>0x5AA55AA55AA55AA5</code></td></tr>
+          <tr><td><code>.stack</code></td><td>16 KiB system stack, grows down to the guard</td></tr>
+          <tr><td><code>__free_memory_start</code></td><td>handed to <code>tx_application_define</code></td></tr>
+        </tbody>
+      </table></div>
+      <div class="note warn" style="opacity:1;transform:none"><i class="k">!</i><div><b>QEMU-specific, said so in the design</b><span>QEMU loads the ELF at its link address, so <code>.data</code> needs no copy. A ROM-based board must add it; the safety manual lists this as an assumption of use.</span></div></div>
+      <div class="note ok" style="opacity:1;transform:none"><i class="k">&#10003;</i><div><b>Guard checked on every verdict</b><span><code>bsp_test_report</code> verifies the guard pattern before printing PASS.</span></div></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 19 Interrupt route -->
+<section class="slide" data-sec="BSP &amp; QEMU"><div class="page">
+  <div class="filehead"><span>Exhibit <b>B-2</b> &nbsp;|&nbsp; UART receive interrupt, LA-REQ-105</span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>Two interrupt controllers between the UART and the CPU</h2></div>
+  <div class="route"><span class="hw">NS16550 UART</span><i>&rarr;</i><span>PCH-PIC input 2<br>HTMSI vector 2, unmasked</span><i>&rarr;</i><span>EXTIOI input 2<br>IPMAP grp0 &rarr; IP0, COREMAP CPU0</span><i>&rarr;</i><span class="hw">CPU pin 2<br>ESTAT.IS[2]</span><i>&rarr;</i><span>vector &rarr; <code>bsp_external_irq_handler</code></span></div>
+  <div class="grid">
+    <div class="code"><div class="bar"><i></i><i></i><i></i><span>bsp/qemu_virt/src/intr.c (excerpt)</span></div><pre data-lang="c">bool bsp_external_irq_init(void) /* parasoft-suppress MISRAC2025-RULE_8_7-a "DEV-011" */
+{
+    uint32_t extioi_base = (uint32_t) BSP_EXTIOI_IOCSR_BASE;
+    bool     ok = true;
+
+    /* PCH-PIC: send line 2 out on vector 2.  The vector table resets to
+       zero, which would route every line to EXTIOI input 0.  */
+    *pch_pic_reg8((uint32_t) BSP_PCH_PIC_REG_HTMSI_VEC + BSP_UART_PCH_IRQ) =
+        (uint8_t) BSP_UART_PCH_IRQ;
+
+    /* EXTIOI: input group 0 to IP0, UART input 2 to CPU 0.  */
+    bsp_iocsr_write32(extioi_base + (uint32_t) BSP_EXTIOI_REG_IPMAP,
+                      (uint32_t) EXTIOI_IPMAP_GROUP0_IP0);
+    /* ... enable input 2, unmask PCH-PIC line 2 ... */
+
+    /* Verify the route as the guest observes it.  */
+    if (bsp_iocsr_read32(extioi_base + (uint32_t) BSP_EXTIOI_REG_IPMAP) !=
+        (uint32_t) EXTIOI_IPMAP_GROUP0_IP0)
+    {
+        ok = false;
+    }
+    return ok;
+}
+
+void bsp_external_irq_handler(void)
+{
+    /* End of interrupt at the EXTIOI first.  The UART line is level
+       triggered but the EXTIOI latches, so clearing the service latch
+       before draining guarantees that a byte arriving afterwards raises
+       the CPU line again instead of being lost.  */
+    bsp_iocsr_write32((uint32_t) BSP_EXTIOI_IOCSR_BASE + (uint32_t) BSP_EXTIOI_REG_COREISR,
+                      (uint32_t) PCH_PIC_UART_IRQ_MASK);
+    received = bsp_uart_rx_isr();      /* drain FIFO into a 128-byte SPSC ring */
+}</pre></div>
+    <div class="notes">
+      <div class="note blue" style="transition-delay:.3s"><i class="k">1</i><div><b>Verified against QEMU source</b><span>Offsets were checked in QEMU 8.2.2 <code>hw/intc/loongarch_pch_pic.c</code>, <code>loongarch_extioi.c</code> and <code>hw/loongarch/virt.c</code>, and cited in <code>board.h</code>.</span></div></div>
+      <div class="note" style="transition-delay:.6s"><i class="k">2</i><div><b>Read-back of every register</b><span>Init returns <code>false</code> if any value differs: it detects mis-programming or a controller that is not what the model assumes.</span></div></div>
+      <div class="note ok" style="transition-delay:.9s"><i class="k">3</i><div><b>Latch before drain</b><span>A lost-byte race closed by ordering, not by timing. Overflow and line errors are counted, never blocking.</span></div></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 20 QEMU harness -->
+<section class="slide" data-sec="BSP &amp; QEMU"><div class="page">
+  <div class="filehead"><span>Teleprinter <b>T-1</b> &nbsp;|&nbsp; bring-up images on QEMU</span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>Validation on QEMU: the console is the verdict</h2></div>
+  <div class="two">
+    <div class="tape" data-type><span class="stamp ok rcvd">Passed</span><span class="p">$ </span>tools/run_qemu.sh build/debug/test/bringup/bringup_test.elf
+ThreadX LoongArch64 BSP bring-up (QEMU virt)
+  <span class="g">PASS</span>  ThreadX data model (LONG/ULONG 32-bit, LP64)
+  <span class="g">PASS</span>  timer init
+  <span class="g">PASS</span>  timer frequency 100 MHz
+  <span class="g">PASS</span>  disable clears CRMD.IE and returns old posture
+  <span class="g">PASS</span>  enable sets CRMD.IE and returns old posture
+  <span class="g">PASS</span>  timer interrupts delivered
+  <span class="g">PASS</span>  line disable clears ECFG.LIE
+  <span class="g">PASS</span>  line enable sets ECFG.LIE
+ticks=20
+<span class="g">*** TEST PASSED ***</span>
+<span class="p">$ </span>tools/run_qemu.sh --rx-file uart_rx_payload.txt --rx-after "RX READY" bringup_uart_rx_test.elf
+RX READY
+  <span class="g">PASS</span>  interrupts disabled inside the ISR
+  <span class="g">PASS</span>  semaphore put from ISR succeeded
+rx isr_calls=89 isr_bytes=90 max_drain=2 wakeups=89 ticks=7
+<span class="g">*** TEST PASSED ***</span></div>
+    <div style="display:grid;gap:10px">
+      <div class="tape" data-type style="min-height:0"><span class="stamp rcvd">Expected</span><span class="p">$ </span>tools/run_qemu.sh --expect "Ecode=0x000000000000000c" bringup_fatal_test.elf
+Fatal exception test: raising BRK
+<span class="r">*** FATAL EXCEPTION ***</span>
+Ecode=0x000000000000000c ESTAT=0x00000000000c0000 ERA=0x0000000000201064</div>
+      <div class="list">
+        <div><span><code>run_qemu.sh</code> runs <code>-M virt -cpu la464 -smp 1 -m 1G -nographic -nic none -no-reboot</code> under <code>timeout</code>. A FATAL or FAILED line fails the run unless it is the expected result.</span></div>
+        <div><span>The BSP powers QEMU off through the <code>virt</code> power device, so the exit code is part of the verdict.</span></div>
+        <div><span><code>--rx-file</code> feeds a FIFO into the guest's serial input once the guest prints its ready line: interrupt-driven receive is tested end to end.</span></div>
+        <div><span>Seven images: timer and posture, fatal exception, memory functions, long idle, relinquish with IE on, UART RX interrupt, and the 8-thread demo with FP context checks.</span></div>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 21 Regression -->
+<section class="slide" data-sec="BSP &amp; QEMU"><div class="page">
+  <div class="filehead"><span>Teleprinter <b>T-2</b> &nbsp;|&nbsp; upstream ThreadX regression suite</span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>The vendor's own test suite, 576 runs, on every push</h2></div>
+  <div class="grid">
+    <div class="tape" data-type><span class="stamp ok rcvd">576/576</span><span class="p">$ </span>tools/regression.sh all   <span class="m"># condensed: summary line per configuration</span>
+<span class="h">== default</span>
+18/96 Test  #1: default::threadx_block_memory_basic_test ......   Passed  0.14 sec
+<span class="g">100% tests passed, 0 tests failed out of 96</span>
+<span class="h">== optimized</span>
+<span class="g">100% tests passed, 0 tests failed out of 96</span>
+<span class="h">== disable_notify_callbacks</span>
+<span class="g">100% tests passed, 0 tests failed out of 96</span>
+<span class="h">== stack_checking</span>
+<span class="g">100% tests passed, 0 tests failed out of 96</span>
+<span class="h">== stack_checking_rand_fill</span>
+<span class="g">100% tests passed, 0 tests failed out of 96</span>
+<span class="h">== trace</span>
+<span class="g">100% tests passed, 0 tests failed out of 96</span>
+REGRESSION_EXIT=<span class="g">0</span>
+<span class="h">== GitHub Actions, commit 72bfe25</span>  <span class="m"># gh run view, summarised</span>
+build (Debug) <span class="g">success</span>  build (Release) <span class="g">success</span>  regression x6 <span class="g">success</span></div>
+    <div class="notes">
+      <div class="note blue" style="transition-delay:.3s"><i class="k">1</i><div><b>Standalone harness</b><span>The upstream suite is built for LoongArch with its own minimal libc (<code>printf</code>, <code>time</code>, <code>rand</code>) and runs on QEMU with <code>ctest -j</code>, one QEMU per test.</span></div></div>
+      <div class="note" style="transition-delay:.6s"><i class="k">2</i><div><b>Six kernel configurations</b><span>Each redefines <code>TX_*</code> macros (stack checking, random fill, trace, no notify callbacks, optimized), so the port is exercised against six kernel builds.</span></div></div>
+      <div class="note ok" style="transition-delay:.9s"><i class="k">3</i><div><b>CI matrix</b><span>8 jobs on Ubuntu 24.04: Debug and Release with QEMU tests and the DEV-001 <code>nm -u</code> check, plus one job per configuration.</span></div></div>
+      <div class="note warn" style="transition-delay:1.2s"><i class="k">4</i><div><b>Recorded, not hidden</b><span>A first run on a host saturated by a Parasoft scan showed one timing flake (<code>timer_multiple_accuracy</code>). It is recorded in <code>regression.md</code> r3, with the rule "run on an unloaded host".</span></div></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 22 MISRA standard -->
+<section class="slide" data-sec="MISRA" id="misra"><div class="page">
+  <div class="filehead"><span>Standard <b>MISRA C:2025</b> &nbsp;|&nbsp; with MISRA Compliance:2020</span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>MISRA C:2025 as an enforceable contract, not a checklist</h2></div>
+  <div class="two">
+    <div>
+      <div class="list">
+        <div><span><b>MISRA C:2025</b> is the current edition of the MISRA C guidelines: it consolidates MISRA C:2012 with its amendments and corrigenda and continues the C99/C11/C18 coverage. We build ISO C99, freestanding.</span></div>
+        <div><span><b>Directives</b> need process evidence (Dir 1.1 implementation-defined behaviour, Dir 4.2/4.3 assembly). <b>Rules</b> are mostly decidable by a tool; some need flow analysis.</span></div>
+        <div><span><b>MISRA Compliance:2020</b> defines how to claim compliance: a GEP (enforcement plan), a GRP (re-categorization) and a GCS (compliance summary per guideline), plus deviation records.</span></div>
+      </div>
+      <div class="bars" style="margin-top:12px">
+        <div><span>Mandatory</span><i style="width:14.6%"></i><b>22</b></div>
+        <div><span>Required</span><i class="blue" style="width:100%"></i><b>151</b></div>
+        <div><span>Advisory</span><i class="warn" style="width:29.8%;background:var(--warn)"></i><b>45</b></div>
+        <div><span>Disapplied (GRP)</span><i class="grey" style="width:1%"></i><b>1</b></div>
+      </div>
+      <p class="footnote" style="margin-top:6px">219 guidelines in the project GRP, 218 active.</p>
+    </div>
+    <div class="tw"><table class="form tight">
+      <thead><tr><th>Category</th><th>Project policy (GEP section 3)</th></tr></thead>
+      <tbody>
+        <tr><td><b>Mandatory</b></td><td>Must be complied with. No deviation is permitted.</td></tr>
+        <tr><td><b>Required</b></td><td>Complied with unless a formal deviation is approved by both the safety manager and the technical lead, with technical evidence that the safety function is not at risk.</td></tr>
+        <tr><td><b>Advisory</b></td><td>Applied where it does not prevent suitable code; deviation with rationale, technical lead approval.</td></tr>
+        <tr><td><b>Disapplied</b></td><td>Only through the GRP; never lowered below the MISRA category except Advisory &rarr; Disapplied.</td></tr>
+        <tr><td><b>Scope</b></td><td>Port and BSP C sources and headers. ThreadX kernel: separate report-only gap analysis. Test code: analysed, reported separately.</td></tr>
+        <tr><td><b>Claim</b></td><td>Only if 0 Mandatory violations and every other violation covered by an approved deviation or the GRP, on the exact baseline sources.</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</div></section>
+
+<!-- 23 Parasoft pipeline -->
+<section class="slide" data-sec="MISRA"><div class="page">
+  <div class="filehead"><span>Procedure <b>M-1</b> &nbsp;|&nbsp; Parasoft C/C++test 2026.1.3</span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>How the analysis is wired: real build, real compiler model</h2></div>
+  <div class="flow">
+    <div class="st done"><b>Compiler definition</b>GCC 14 LoongArch64 modelled for C/C++test (sizes, predefined macros)</div>
+    <div class="st done"><b>Build capture</b><code>cpptestcli -trace</code> of the actual CMake/Ninja build</div>
+    <div class="st done"><b>Configuration</b>"MISRA C 2025", rule map 9.5.0, flow analysis (BD-*)</div>
+    <div class="st done"><b>Two scopes</b>product (Release) and tests (bring-up, demo, regression)</div>
+    <div class="st done"><b>Reports</b>HTML, SARIF, XML into <code>docs/misra/reports/</code></div>
+    <div class="st done"><b>Generators</b>GCS and dashboard from SARIF + GRP + DEV records</div>
+  </div>
+  <div class="two">
+    <div class="code"><div class="bar"><i></i><i></i><i></i><span>shell</span></div><pre data-lang="sh"># product scope: port + BSP + kernel, Release build
+tools/misra.sh product build/misra         # -&gt; build/misra/report
+# test-harness scope, reported separately
+tools/misra.sh tests   build/misra-tests   # -&gt; build/misra-tests/report
+
+# evidence regeneration
+python3 tools/parasoft/gcs_gen.py   &gt; docs/misra/reports/guideline-compliance-summary.md
+python3 tools/parasoft/dashboard.py &gt; docs/misra/reports/dashboard.html
+
+# every suppression must name a deviation record
+/* parasoft-suppress MISRAC2025-RULE_5_10-a "DEV-001" */</pre></div>
+    <div class="notes">
+      <div class="note blue" style="opacity:1;transform:none"><i class="k">T2</i><div><b>Tool classification and validation</b><span>Parasoft is a T2 tool (IEC 61508-3 7.4.4): it can miss a defect but cannot create one. Validation: 8 seeded violations, <b>8/8 detected</b>, recorded in <code>tools.md</code>. GCC is T3 with its own confidence measures.</span></div></div>
+      <div class="note ok" style="opacity:1;transform:none"><i class="k">=</i><div><b>Same sources, same flags</b><span>The analysis compiles with the product's exact options (<code>-march=loongarch64 -mabi=lp64d -msimd=none -ffreestanding -nostdinc</code>), so findings match what ships.</span></div></div>
+      <div class="note warn" style="opacity:1;transform:none"><i class="k">!</i><div><b>Trace, not hand-written project files</b><span>Adding a source file to CMake adds it to the analysis automatically; no drift between build and scan.</span></div></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 24 Dashboard overview -->
+<section class="slide" data-sec="MISRA"><div class="page">
+  <div class="filehead"><span>Exhibit <b>D-1</b> &nbsp;|&nbsp; compliance dashboard, overview</span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>The dashboard: one page, generated from the SARIF</h2></div>
+  <div class="grid">
+    <div class="exhibit"><i class="clip"></i><img src="assets/dash-overview.png" alt="MISRA C:2025 dashboard overview: KPIs, violation trend, guideline status">
+      <div class="pin" style="left:4%;top:20%;transition-delay:.3s">1</div>
+      <div class="pin blue" style="left:20%;top:20%;transition-delay:.6s">2</div>
+      <div class="pin warn" style="left:35.5%;top:20%;transition-delay:.9s">3</div>
+      <div class="pin ok" style="left:67%;top:20%;transition-delay:1.2s">4</div>
+      <div class="pin" style="left:9%;top:52%;transition-delay:1.5s">5</div>
+      <div class="pin ok" style="left:84%;top:46%;transition-delay:1.8s">6</div>
+      <div class="label">Exhibit D-1. docs/misra/reports/dashboard.html, generated 2026-10-22.</div></div>
+    <div class="notes">
+      <div class="note" style="transition-delay:.3s"><i class="k">1</i><div><b>0 unsuppressed findings in ESL code</b><span>143 at baseline, 0 since Scan 2.</span></div></div>
+      <div class="note blue" style="transition-delay:.6s"><i class="k">2</i><div><b>218 of 218 active guidelines</b><span>94.0% without any deviation.</span></div></div>
+      <div class="note warn" style="transition-delay:.9s"><i class="k">3</i><div><b>Kernel shown, not hidden</b><span>Upstream ThreadX: 19 guidelines, 613 findings, report only.</span></div></div>
+      <div class="note ok" style="transition-delay:1.2s"><i class="k">4</i><div><b>Tests next to analysis</b><span>576/576 regression and 600/600 stress on the same page.</span></div></div>
+      <div class="note" style="transition-delay:1.5s"><i class="k">5</i><div><b>Trend per scan</b><span>Port and BSP separately; five scans in two days.</span></div></div>
+      <div class="note ok" style="transition-delay:1.8s"><i class="k">6</i><div><b>Guideline status</b><span>205 compliant, 13 with deviation, 1 disapplied, 0 violated.</span></div></div>
+    </div>
+  </div>
+  <p class="footnote">Live: <a href="https://zuwasi.github.io/threadx-loongarch64/misra/reports/dashboard.html" target="_blank" rel="noopener">zuwasi.github.io/threadx-loongarch64/misra/reports/dashboard.html</a>. Self-contained HTML; no server, no database, reproducible from the repository.</p>
+</div></section>
+
+<!-- 25 Reduction -->
+<section class="slide" data-sec="MISRA"><div class="page">
+  <div class="filehead"><span>Exhibit <b>D-2</b> &nbsp;|&nbsp; findings per scan</span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>From 143 to 0: how ESL code reached zero</h2></div>
+  <div class="exhibit"><i class="clip"></i><img src="assets/dash-findings.png" alt="Findings per scan by component and compliance by MISRA category"><div class="label">Exhibit D-2. Product analysis per scan: kernel (grey), port, BSP, ESL test code; compliance by category.</div></div>
+  <div class="three">
+    <div class="note" style="transition-delay:.3s"><i class="k">1</i><div><b>Fix the code first</b><span>Essential-type casts and <code>U</code> suffixes, explicit comparisons, one exit per function, <code>const</code> pointers, no inline assembly (CSR access moved to <code>.S</code>), static internal linkage. Scan 1 &rarr; Scan 2: 121 &rarr; 0 port, 22 &rarr; 0 BSP.</span></div></div>
+    <div class="note blue" style="transition-delay:.6s"><i class="k">2</i><div><b>Deviate only what cannot change</b><span>Names and macros that ThreadX's API dictates, MMIO addresses, C library signatures. Each is a record with risk analysis and an ID in every suppression.</span></div></div>
+    <div class="note ok" style="transition-delay:.9s"><i class="k">3</i><div><b>Re-scan on every change</b><span>Scans 3 to 5 re-ran on the final sources (scheduler fix, UART RX route): still 0. Tests scope: 28 ESL test findings &rarr; 0.</span></div></div>
+  </div>
+</div></section>
+
+<!-- 26 Deviations -->
+<section class="slide" data-sec="MISRA"><div class="page">
+  <div class="filehead"><span>Exhibit <b>D-3</b> &nbsp;|&nbsp; deviation records DEV-001 to DEV-015</span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>What we deviated, and why</h2></div>
+  <div class="grid">
+    <div class="exhibit"><i class="clip"></i><img src="assets/dash-deviations.png" alt="Deviation records table from the dashboard"><div class="label">Exhibit D-3. Fifteen records covering 13 guidelines. 0 Mandatory guidelines deviated.</div></div>
+    <div class="notes">
+      <div class="note" style="transition-delay:.3s"><i class="k">A</i><div><b>Imposed by the ThreadX API</b><span>DEV-002 <code>_tx_</code> reserved prefix (5.10), DEV-003 basic type names (Dir 4.6), DEV-004 extension hooks as function-like macros (Dir 4.9), DEV-005 long identifiers (1.1), DEV-012 <code>#undef</code> (20.5), DEV-013 version ID (2.8, 8.6).</span></div></div>
+      <div class="note blue" style="transition-delay:.6s"><i class="k">B</i><div><b>Imposed by hardware or the C library</b><span>DEV-001 <code>memcpy</code>/<code>memmove</code>/<code>memset</code>/<code>memcmp</code> names (5.10), DEV-008 <code>int</code> in ISO signatures (Dir 4.6), DEV-009 <code>void *</code> conversion (11.5), DEV-007 MMIO integer-to-pointer (11.4), DEV-006 functions defined in assembly (8.6).</span></div></div>
+      <div class="note warn" style="transition-delay:.9s"><i class="k">C</i><div><b>Tool heuristics with evidence</b><span>DEV-010 static-assert typedef idiom (2.3), DEV-011 API used outside the scan scope (8.7), DEV-014 flow-analysis null on <code>memset</code> (Dir 4.1), DEV-015 tick reads flagged as unchecked returns (Dir 4.7).</span></div></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 27 DEV-001 deep dive -->
+<section class="slide" data-sec="MISRA"><div class="page">
+  <div class="filehead"><span>Record <b>DEV-001</b> &nbsp;|&nbsp; Rule 5.10, Required</span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>Anatomy of a Required deviation</h2></div>
+  <div class="two">
+    <div class="code"><div class="bar"><i></i><i></i><i></i><span>ports/loongarch64/gnu/libc/src/tx_la64_string.c</span></div><pre data-lang="c">void *memmove(void *dest, const void *src, size_t n) /* parasoft-suppress MISRAC2025-RULE_5_10-b "DEV-001" */
+{
+    uint8_t       *d = (uint8_t *) dest;       /* parasoft-suppress MISRAC2025-RULE_11_5-b "DEV-009" */
+    const uint8_t *s = (const uint8_t *) src;  /* parasoft-suppress MISRAC2025-RULE_11_5-b "DEV-009" */
+    size_t         i;
+
+    if ((uintptr_t) d &lt;= (uintptr_t) s)
+    {
+        for (i = 0U; i &lt; n; i++)
+        {
+            d[i] = s[i];
+        }
+    }
+    else
+    {
+        for (i = n; i &gt; 0U; i--)
+        {
+            d[i - 1U] = s[i - 1U];
+        }
+    }
+
+    return dest;
+}</pre></div>
+    <div>
+      <div class="list">
+        <div><span><b>Why the names cannot change:</b> GCC emits calls to <code>memcpy</code>/<code>memset</code> for struct copies and initialisers even with <code>-ffreestanding</code>, and ThreadX calls them. Without <code>-nostdlib</code> libc there is no other definition.</span></div>
+        <div><span><b>Hazard:</b> a reserved name clashing with a library definition with different semantics. <b>Why it cannot occur:</b> no C library is linked, enforced in CI by <code>nm -u</code> on the object (no undefined symbols).</span></div>
+        <div><span><b>Evidence:</b> unit test <code>bringup_memory_functions</code> covers overlap in both directions and zero length; 100% line coverage of the file.</span></div>
+      </div>
+      <div class="tw" style="margin-top:10px"><table class="form tight">
+        <thead><tr><th>Condition of approval</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>1. Parasoft checkers confirmed (5_10-b, 5_10-c)</td><td><span class="stamp ok" style="font-size:11px;padding:1px 6px">Met r2</span></td></tr>
+          <tr><td>2. Unit tests pass and are referenced</td><td><span class="stamp ok" style="font-size:11px;padding:1px 6px">Met r4</span></td></tr>
+          <tr><td>3. CI symbol check in place</td><td><span class="stamp ok" style="font-size:11px;padding:1px 6px">Met r3</span></td></tr>
+          <tr><td>4. Safety manager and technical lead approve</td><td><span class="stamp warn" style="font-size:11px;padding:1px 6px">TL pending</span></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 28 Kernel gap -->
+<section class="slide" data-sec="MISRA"><div class="page">
+  <div class="filehead"><span>Exhibit <b>D-4</b> &nbsp;|&nbsp; upstream kernel gap analysis (M7) and quality gates</span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>The kernel we did not touch: 613 findings, 0 Mandatory</h2></div>
+  <div class="exhibit"><i class="clip"></i><img src="assets/dash-gates.png" alt="Test-harness scope, top violated guidelines in the upstream kernel, quality gates">
+    <div class="pin blue" style="left:36%;top:6%;transition-delay:.3s">1</div>
+    <div class="pin ok" style="left:67%;top:6%;transition-delay:.6s">2</div>
+    <div class="label">Exhibit D-4. Top violated guidelines in ThreadX common code; quality gates of the release.</div></div>
+  <div class="three">
+    <div class="note blue" style="transition-delay:.3s"><i class="k">1</i><div><b>Rule 5.10 is 229 of 613</b><span><code>_tx_</code> reserved identifiers throughout the kernel API; then 8.13 (113), 13.3 (105), Dir 4.4 (40). 178 files, 19 of 219 guidelines.</span></div></div>
+    <div class="note" style="transition-delay:.6s"><i class="k">!</i><div><b>Report only, by plan</b><span>Modifying ThreadX would fork it. The gap analysis triages Required findings for focused review; no finding is claimed as compliant or deviated.</span></div></div>
+    <div class="note ok" style="transition-delay:.9s"><i class="k">2</i><div><b>Gates, with one honest OPEN</b><span>All technical gates PASS; deviation approvals 0/15 final stays OPEN until people sign.</span></div></div>
+  </div>
+</div></section>
+
+<!-- 29 Klocwork mapping -->
+<section class="slide" data-sec="MISRA"><div class="page">
+  <div class="filehead"><span>Note to file &nbsp;|&nbsp; <b>if your shop runs Klocwork</b></span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>The method is tool-neutral; the evidence format is not</h2></div>
+  <div class="tw"><table class="form">
+    <thead><tr><th>Workflow step</th><th>In this project (Parasoft C/C++test)</th><th>Klocwork equivalent to plan for</th></tr></thead>
+    <tbody>
+      <tr class="row" style="transition-delay:.1s"><td>Build capture</td><td><code>cpptestcli -trace</code> over CMake/Ninja</td><td><code>kwinject</code> build specification</td></tr>
+      <tr class="row" style="transition-delay:.2s"><td>Checker set</td><td>"MISRA C 2025" builtin config, rule map 9.5.0</td><td>MISRA taxonomy; confirm the MISRA C:2025 coverage of your Klocwork version against the GRP</td></tr>
+      <tr class="row" style="transition-delay:.3s"><td>Deviation marking</td><td><code>parasoft-suppress ... "DEV-nnn"</code> in source</td><td>Code annotations or issue status with the DEV ID in the comment</td></tr>
+      <tr class="row" style="transition-delay:.4s"><td>Machine-readable output</td><td>SARIF, feeding GCS and dashboard generators</td><td>Export to SARIF or use the REST API; the generators only need guideline, file, line</td></tr>
+      <tr class="row" style="transition-delay:.5s"><td>Tool confidence</td><td>T2 classification, 8/8 seeded-violation validation</td><td>Same: seeded test suite per tool version (or the vendor's qualification kit)</td></tr>
+      <tr class="row" style="transition-delay:.6s"><td>Structural coverage</td><td>C/C++test <code>cpptestcc</code> instrumentation on target</td><td>Klocwork is static only: pair it with a coverage tool</td></tr>
+      <tr class="row" style="transition-delay:.7s"><td>CI gate</td><td>0 unsuppressed findings in product scope</td><td>Same gate on the Klocwork project, per change set</td></tr>
+    </tbody>
+  </table></div>
+  <p class="footnote">ESL works with both tool chains (Parasoft and Perforce partner). Running two analyzers on safety code is a valid diversity measure, provided the GEP says which one is the compliance tool of record.</p>
+</div></section>
+
+<!-- 30 Why coverage -->
+<section class="slide" data-sec="Coverage" id="coverage"><div class="page">
+  <div class="filehead"><span>Requirement <b>IEC 61508-3 Table B.2</b> &nbsp;|&nbsp; dynamic analysis and testing</span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>Why SIL 3 forces structural coverage</h2></div>
+  <div class="two">
+    <div class="tw"><table class="form tight">
+      <thead><tr><th>Structural coverage (Table B.2)</th><th>SIL 1</th><th>SIL 2</th><th>SIL 3</th><th>SIL 4</th></tr></thead>
+      <tbody>
+        <tr><td>Entry points 100%</td><td>HR</td><td>HR</td><td class="hl">HR</td><td>HR</td></tr>
+        <tr><td>Statements 100%</td><td>R</td><td>HR</td><td class="hl">HR</td><td>HR</td></tr>
+        <tr><td>Branches 100%</td><td>R</td><td>R</td><td class="hl">HR</td><td>HR</td></tr>
+        <tr><td>Conditions, MC/DC 100%</td><td>R</td><td>R</td><td class="hl">R</td><td>HR</td></tr>
+      </tbody>
+    </table>
+    <p class="footnote" style="margin-top:6px">HR: highly recommended. Not applying an HR technique at SIL 3 needs a documented rationale in the safety plan. Where 100% is not reached, every gap needs a justification.</p></div>
+    <div class="notes">
+      <div class="note" style="opacity:1;transform:none"><i class="k">1</i><div><b>Tests prove behaviour; coverage proves the tests</b><span>576 passing tests say nothing about code they never reached. Coverage exposes untested defensive paths and dead code.</span></div></div>
+      <div class="note blue" style="opacity:1;transform:none"><i class="k">2</i><div><b>Our safety plan raises the bar</b><span>Statement and branch for all port and BSP C code, MC/DC for multi-condition decisions: the ASIL D reading, so the evidence also serves ISO 26262-6 Table 9.</span></div></div>
+      <div class="note warn" style="opacity:1;transform:none"><i class="k">3</i><div><b>Assembly is out of structural coverage</b><span>The 7 port <code>.S</code> files are verified by requirement-based tests, stress and review; the project plan records this choice.</span></div></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 31 Parasoft coverage -->
+<section class="slide" data-sec="Coverage"><div class="page">
+  <div class="filehead"><span>Procedure <b>C-1</b> &nbsp;|&nbsp; coverage on target, over a UART</span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>Parasoft coverage on a bare-metal LoongArch target</h2></div>
+  <div class="flow">
+    <div class="st done"><b>Instrument</b><code>cpptestcc</code> wraps GCC for port and BSP <code>.c</code> only</div>
+    <div class="st done"><b>Runtime</b>freestanding C/C++test runtime, UART transport</div>
+    <div class="st done"><b>Run</b>tests on QEMU print coverage frames on the console</div>
+    <div class="st done"><b>Decode</b><code>collect_coverage.py</code> &rarr; CLOG</div>
+    <div class="st done"><b>Report</b><code>cpptestcli -config builtin://Coverage</code>, one per scope</div>
+  </div>
+  <div class="two">
+    <div class="code"><div class="bar"><i></i><i></i><i></i><span>tools/parasoft/coverage_launcher.sh</span></div><pre data-lang="sh"># Instrument only ESL-owned port and BSP C translation units. All other
+# sources and assembly are compiled by the original compiler unchanged.
+case "${source_file}" in
+    "${ESL_REPO_ROOT}/ports/loongarch64/gnu/"*.c|"${ESL_REPO_ROOT}/bsp/qemu_virt/"*.c)
+        exec "${CPPTESTCC}" \
+            -compiler gcc_14-64 \
+            -line-coverage \
+            -statement-coverage \
+            -decision-coverage \
+            -mcdc-coverage \
+            -coverage-data-variants \
+            -coverage-early-init \
+            -workspace "${CPPTEST_COVERAGE_WORKSPACE}" \
+            -- "${compiler}" "$@"
+        ;;
+    *)  exec "${compiler}" "$@" ;;
+esac</pre></div>
+    <div style="display:grid;gap:10px">
+      <div class="code"><div class="bar"><i></i><i></i><i></i><span>tools/parasoft/collect_coverage.py</span></div><pre data-lang="py">"""Decode Parasoft CLOG frames emitted as ASCII hex on QEMU's UART."""
+FRAME = re.compile(rb"@@CPPTCOV:([0-9A-Fa-f]{8}):([0-9A-Fa-f]*)\r?\n")</pre></div>
+      <div class="list">
+        <div><span><b>Capabilities:</b> C/C++test instruments line, statement, block, decision/branch, simple condition, MC/DC, function and call coverage, on host or target, with a customizable runtime and transport; a qualification kit exists for ISO 26262 and IEC 61508 use.</span></div>
+        <div><span><b>Finding:</b> the <b>Standard</b> edition we have reports <b>line coverage only</b>, even with statement, decision and MC/DC instrumentation active. Those reports need C/C++test CT or Professional.</span></div>
+        <div><span><b>One report per scope:</b> the six regression configurations compile different variants of the same kernel functions, and merging them makes the tool drop that coverage.</span></div>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 32 Coverage results -->
+<section class="slide" data-sec="Coverage"><div class="page">
+  <div class="filehead"><span>Exhibit <b>D-5</b> &nbsp;|&nbsp; coverage on the dashboard</span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>184 of 200 lines covered; the other 16 each have a reason</h2></div>
+  <div class="exhibit"><i class="clip"></i><img src="assets/dash-coverage.png" alt="Structural coverage card and line coverage by file on the dashboard">
+    <div class="pin ok" style="left:1.5%;top:4%;transition-delay:.3s">1</div>
+    <div class="pin warn" style="left:39.5%;top:4%;transition-delay:.6s">2</div>
+    <div class="label">Exhibit D-5. Dashboard coverage section, root scope (bring-up tests and demo, 7/7 passed), 2026-10-21.</div></div>
+  <div class="tw"><table class="form tight">
+    <thead><tr><th>Uncovered location</th><th>Lines</th><th>Justification</th><th>Class</th></tr></thead>
+    <tbody>
+      <tr><td><code>power.c</code> <code>bsp_poweroff</code></td><td>3</td><td>Run on every test, but after the runtime flushed coverage; QEMU only exits through this write</td><td>Measurement limit</td></tr>
+      <tr><td><code>power.c</code> <code>bsp_test_report</code></td><td>3</td><td>Failure reporting (guard damaged, test failed): all tests pass</td><td>Failure path</td></tr>
+      <tr><td><code>intr.c</code> route read-back</td><td>5</td><td>QEMU always returns the programmed values</td><td>Defensive</td></tr>
+      <tr><td><code>uart.c</code></td><td>4</td><td>THRE busy-wait, line error, ring overflow, early exit in <code>bsp_uart_rx_read</code></td><td>Platform / test gap</td></tr>
+      <tr><td><code>tx_timer_interrupt.c</code></td><td>1</td><td>Timer-list wrap: reached by the long regression scope</td><td>Other scope</td></tr>
+    </tbody>
+  </table></div>
+  <p class="footnote"><span class="stamp warn" style="font-size:11px;padding:1px 6px">Open item</span> &nbsp;Statement, branch and MC/DC reports, fault-injection tests for the defensive paths and one unit test for the early exit. Deferred to the audit phase by decision, and stated as open in the coverage report and the release notes.</p>
+</div></section>
+
+<!-- 33 Timeline -->
+<section class="slide" data-sec="Timeline" id="timeline"><div class="page">
+  <div class="filehead"><span>Chronology &nbsp;|&nbsp; <b>git log, 19 Oct 17:24 to 22 Oct 13:04</b></span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>Four days, from decision to release candidate</h2></div>
+  <div class="days">
+    <div class="day" style="transition-delay:.1s"><h3>Day 1 <small>Mon 19 Oct</small></h3><ul>
+      <li>17:24 repository, MIT licence</li><li>17:30 build skeleton and <code>tx_port.h</code></li><li>17:32 fully freestanding build</li><li>17:41 MISRA GEP and deviation process</li><li>17:48 safety plan, requirements, tool classification, verification plan</li><li>18:05 QEMU <code>virt</code> BSP and M2 bring-up tests in CI</li></ul><div class="mile">M0-M2 done</div></div>
+    <div class="day" style="transition-delay:.35s"><h3>Day 2 <small>Tue 20 Oct</small></h3><ul>
+      <li>Port: context frames, scheduler, system return, stack build</li><li>8-thread demo with FP context checks</li><li>Upstream regression harness: 576/576 after PR-M4-001</li><li>MISRA scans 1-4: 143 &rarr; 0, DEV-001 to DEV-014</li><li>PR-M5-001 found by stress, fixed: 600/600</li><li>Parasoft validated: 8/8 seeded</li></ul><div class="mile">M3-M5 done</div></div>
+    <div class="day" style="transition-delay:.6s"><h3>Day 3 <small>Wed 21 Oct</small></h3><ul>
+      <li>09:11 port, regression harness, M5 evidence committed</li><li>16:39 compliance dashboard</li><li>UART RX interrupt route (LA-REQ-105), scan 5: 0</li><li>Memory, long-idle, relinquish tests; stack guard</li><li>Parasoft coverage on target: 92% line</li><li>Kernel gap analysis: 613 findings</li></ul><div class="mile">M6-M7 done</div></div>
+    <div class="day" style="transition-delay:.85s"><h3>Day 4 <small>Thu 22 Oct</small></h3><ul>
+      <li>Design, compiler behaviour, safety manual, traceability generator</li><li>Verification report, release notes, approval package</li><li>Full re-validation on the exact tree</li><li>13:04 release commit; CI 8/8 green</li><li>Tag <code>v1.0.0-rc1</code>, GitHub pre-release</li><li>Documentation on GitHub Pages</li></ul><div class="mile">M8 rc1 tagged</div></div>
+  </div>
+  <div class="stamps"><span class="stamp big">~3 days 20 hours elapsed</span><span class="stamp blue">17 commits</span><span class="stamp ok">0 kernel lines changed</span></div>
+  <div class="ba">
+    <div><h3>19 Oct, 17:24</h3><div class="list"><div><span>No LoongArch port of ThreadX</span></div><div><span>No BSP, no way to run a test</span></div><div><span>No MISRA C:2025 analysis, no deviations</span></div><div><span>No safety plan, requirements or evidence</span></div></div></div>
+    <i>&rarr;</i>
+    <div class="after"><h3>22 Oct, 13:04</h3><div class="list"><div><span>Port: 7 assembly + 3 C files, 576/576 upstream tests</span></div><div><span>QEMU <code>virt</code> BSP with UART RX interrupts, 7/7 images in CI</span></div><div><span>0 MISRA C:2025 findings in ESL code, 15 deviation records</span></div><div><span>IEC 61508-3 SC 3 work products, traceability, 92% line coverage</span></div></div></div>
+  </div>
+</div></section>
+
+<!-- 34 Status -->
+<section class="slide" data-sec="Timeline"><div class="page">
+  <div class="filehead"><span>Approval package &nbsp;|&nbsp; <b>what is still open</b></span><span class="tabs"></span></div>
+  <div class="stamps"><span class="stamp">Prepared, not approved</span></div>
+  <h2>What four days did not, and could not, produce</h2>
+  <div class="two">
+    <div class="list">
+      <div><span><b>Human approvals.</b> Deviation records and documents need the technical lead and the safety manager; DEV-001 has a conditional safety-manager approval, the rest are drafts. Approvals will be confirmed by signed git tags.</span></div>
+      <div><span><b>Independent reviews.</b> Code, design and assembly reviews by an independent reviewer: logged as "not performed", never back-filled.</span></div>
+      <div><span><b>Full structural coverage.</b> Statement, branch and MC/DC reports, plus fault injection for defensive paths.</span></div>
+      <div><span><b>Real silicon.</b> Everything ran on QEMU 8.2.2. A 3A5000/2K-series board, its interrupt controller and timing need their own validation and a ROM-capable BSP.</span></div>
+      <div><span><b>Assessment.</b> No independent assessor has seen this. It is an evidence package, not a certificate.</span></div>
+    </div>
+    <div class="exhibit" style="transform:rotate(.6deg)"><img src="assets/dash-gates.png" alt="Quality gates"><div class="label">Every gate is on the dashboard, including the open one.</div></div>
+  </div>
+  <p class="footnote">This is the point of the process: the work that can be automated is done and repeatable in CI; the work that needs people is listed, owned and visible.</p>
+</div></section>
+
+<!-- 35 Reproduce -->
+<section class="slide" data-sec="Timeline"><div class="page">
+  <div class="filehead"><span>Procedure <b>R-1</b> &nbsp;|&nbsp; reproduce every number in this deck</span><span class="tabs"></span></div>
+  <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>Reproduce it on Ubuntu 24.04</h2></div>
+  <div class="two">
+    <div class="code"><div class="bar"><i></i><i></i><i></i><span>shell</span></div><pre data-lang="sh">sudo apt install gcc-14-loongarch64-linux-gnu binutils-loongarch64-linux-gnu \
+                 qemu-system-misc cmake ninja-build
+
+git clone --recurse-submodules https://github.com/zuwasi/threadx-loongarch64.git
+cd threadx-loongarch64
+git checkout v1.0.0-rc1
+
+tools/build.sh Debug
+ctest --test-dir build/debug --output-on-failure      # 7/7
+tools/build.sh Release
+ctest --test-dir build/release --output-on-failure    # 7/7
+tools/check_freestanding_libc.sh build/release        # DEV-001, nm -u empty
+tools/regression.sh all                               # 576/576
+
+# licensed Parasoft workstation
+tools/misra.sh product build/misra
+tools/parasoft/coverage.sh build/parasoft-coverage root
+python3 tools/trace.py --check                        # traceability</pre></div>
+    <div class="list">
+      <div><span><b>Pinned inputs:</b> ThreadX <code>v6.5.2.202603_rel</code>, GCC 14.2.0, QEMU 8.2.2, Parasoft C/C++test Standard 2026.1.3 with rule map 9.5.0.</span></div>
+      <div><span><b>Everything generated is regenerable:</b> compliance summary, dashboard and traceability are produced by scripts in <code>tools/</code> from the reports and the records.</span></div>
+      <div><span><b>Evidence online:</b> <a href="https://zuwasi.github.io/threadx-loongarch64/" target="_blank" rel="noopener">documentation site</a>, <a href="https://zuwasi.github.io/threadx-loongarch64/misra/reports/dashboard.html" target="_blank" rel="noopener">dashboard</a>, <a href="https://github.com/zuwasi/threadx-loongarch64/releases/tag/v1.0.0-rc1" target="_blank" rel="noopener">release v1.0.0-rc1</a>.</span></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 36 Close -->
+<section class="slide" data-sec="Timeline"><div class="page">
+  <div class="filehead"><span>Case file <b>TXLA64-2026-10</b> &nbsp;|&nbsp; closed for rc1</span><span class="tabs"></span></div>
+  <div class="brand"><a href="https://eswlab.com/" target="_blank" rel="noopener"><img src="assets/esl-logo.png" alt="ESL logo"></a><div class="who">Engineering Software Lab (ESL)<br>PX5 and RTOSX partner in Israel &middot; Parasoft and Perforce partner</div></div>
+  <h1>New ISA, real RTOS, SIL 3 evidence.<br>Four days, one evidence trail.</h1>
+  <p class="sub">Porting ThreadX to a new architecture, moving to MISRA C:2025, building a SIL 3 or ASIL D evidence package, or qualifying Parasoft or Klocwork for it? Talk to ESL.</p>
+  <div class="person" style="max-width:640px"><a href="https://www.linkedin.com/in/liezrowice/" target="_blank" rel="noopener"><img src="assets/daniel-liezrowice.jpg" alt="Daniel Liezrowice"></a><div><b>Daniel Liezrowice</b><span class="footnote">CTO, ESL &middot; ThreadX user for over 25 years</span><br><a class="footnote" href="https://eswlab.com/contact-us/" target="_blank" rel="noopener">Contact ESL</a> &nbsp;|&nbsp; <a class="footnote" href="https://www.linkedin.com/in/liezrowice/" target="_blank" rel="noopener">LinkedIn</a> &nbsp;|&nbsp; <a class="footnote" href="https://github.com/zuwasi/threadx-loongarch64" target="_blank" rel="noopener">Source and evidence</a></div></div>
+  <div class="stamps"><span class="stamp blue">Eclipse ThreadX 6.5.2</span><span class="stamp blue">LoongArch64</span><span class="stamp ok">576/576</span><span class="stamp ok">MISRA C:2025, 0 in ESL code</span><span class="stamp big">Case closed for rc1</span></div>
+</div></section>
+
+</div>
+
+<div class="nav prev hidden" id="prev" title="Previous (left arrow)">&#8249;</div>
+<div class="nav next" id="next" title="Next (right arrow)">&#8250;</div>
+<div class="home" id="home" title="Home: table of contents (Home key)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Home</div>
+<div class="progress"><i id="bar"></i></div>
+<div class="counter" id="counter">1 / 36</div>
+
+<script>
+(function(){
+  var SECTIONS=['Intro','ESL','Loongson','Standards','Port','BSP & QEMU','MISRA','Coverage','Timeline'];
+  var deck=document.getElementById('deck'),slides=deck.children,total=slides.length,i=0,moved=false;
+  var prev=document.getElementById('prev'),next=document.getElementById('next'),bar=document.getElementById('bar'),counter=document.getElementById('counter'),hint=document.getElementById('hint');
+  var first={};
+  Array.prototype.forEach.call(slides,function(s,k){var sec=s.dataset.sec;if(!(sec in first))first[sec]=k;});
+  Array.prototype.forEach.call(slides,function(s,k){
+    var tabs=s.querySelector('.tabs');
+    if(tabs){SECTIONS.forEach(function(name){var t=document.createElement('span');t.textContent=name;if(name===s.dataset.sec)t.className='on';t.onclick=function(e){e.stopPropagation();go(first[name]);};tabs.appendChild(t);});}
+    var n=s.querySelector('.roundstamp b');if(n)n.textContent=String(k+1).padStart(2,'0');
+  });
+  var toc=Array.prototype.indexOf.call(slides,document.getElementById('toc'));
+
+  /* syntax highlighting for code panels */
+  var R={
+    c:[['c',/\/\*[\s\S]*?\*\/|\/\/[^\n]*/y],['s',/"(?:\\.|[^"\\\n])*"/y],['p',/(?<=^|\n)[ \t]*#[ \t]*[a-z]+/y],
+       ['k',/\b(?:if|else|for|while|return|static|volatile|const|extern|typedef|sizeof|void|bool|int|char|unsigned|long|short|true|false|NULL|struct|case|switch|break)\b/y],
+       ['t',/\b(?:u?int(?:8|16|32|64|ptr)_t|size_t|VOID|UINT|ULONG|ULONG64|LONG|CHAR|UCHAR|ALIGN_TYPE|TX_THREAD)\b/y],
+       ['n',/\b(?:0x[0-9A-Fa-f]+|\d+)[UuLl]*\b/y],['f',/\b[A-Za-z_]\w*(?=\s*\()/y],['m',/\b[A-Z_][A-Z0-9_]{2,}\b/y],['x',/\b\w+\b/y]],
+    asm:[['c',/\/\*[\s\S]*?\*\/|\/\/[^\n]*/y],['s',/"(?:\\.|[^"\\\n])*"/y],['p',/(?<=^|\n)[ \t]*#[ \t]*[a-z]+/y],
+       ['l',/(?<=^|\n)[A-Za-z_.0-9]+:/y],['i',/(?<=^|\n|:)[ \t]+[a-z][a-z0-9.]*(?=[ \t\n]|$)/y],['d',/\.[a-z]\w*/y],
+       ['r',/\$[a-z][a-z0-9]*/y],['n',/-?\b(?:0x[0-9A-Fa-f]+|\d+)\b/y],['m',/\b[A-Z_][A-Z0-9_]{2,}\b/y],['x',/\b\w+\b/y]],
+    sh:[['c',/(?<=^|\n|\s)#[^\n]*/y],['s',/"(?:\\.|[^"\\\n])*"|'[^'\n]*'/y],['r',/\$\{?[A-Za-z_]\w*\}?/y],
+       ['k',/\b(?:case|esac|in|exec|sudo|git|cd|python3|ctest|cmake)\b/y],['d',/(?<=\s)--?[a-z][\w-]*/y],['f',/(?<=^|\n)[ \t]*tools\/[\w\/.]+/y],['x',/\b\w+\b/y]],
+    py:[['c',/#[^\n]*/y],['s',/r?b?"""[\s\S]*?"""|r?b?"(?:\\.|[^"\\\n])*"/y],['k',/\b(?:import|from|def|return|for|in|if|class)\b/y],['f',/\b[A-Za-z_]\w*(?=\s*\()/y],['m',/\b[A-Z_][A-Z0-9_]{2,}\b/y],['x',/\b\w+\b/y]]
+  };
+  function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  function hl(src,lang){
+    var rules=R[lang],out='',pos=0,plain='';
+    while(pos<src.length){
+      var hit=null;
+      for(var r=0;r<rules.length;r++){var re=rules[r][1];re.lastIndex=pos;var m=re.exec(src);if(m&&m[0].length){hit=[rules[r][0],m[0]];break;}}
+      if(!hit){plain+=src[pos];pos++;continue;}
+      out+=esc(plain);plain='';
+      var cls=hit[0],txt=hit[1];
+      if(cls==='c'&&/parasoft-suppress/.test(txt))cls='sup';
+      out+=cls==='x'?esc(txt):'<span class="tk-'+cls+'">'+esc(txt)+'</span>';
+      pos+=txt.length;
+    }
+    return out+esc(plain);
+  }
+  document.querySelectorAll('pre[data-lang]').forEach(function(p){p.innerHTML=hl(p.textContent,p.dataset.lang);});
+
+  /* teleprinter */
+  document.querySelectorAll('.tape[data-type]').forEach(function(t){var s=t.querySelector('.rcvd');t.dataset.stamp=s?s.outerHTML:'';if(s)s.remove();t.dataset.html=t.innerHTML.replace(/^\s*\n/,'');});
+  var typing=0;
+  function playTape(t){
+    var id=++typing,lines=t.dataset.html.split('\n'),k=0;
+    t.innerHTML=t.dataset.stamp;var body=document.createElement('span');t.appendChild(body);
+    (function step(){
+      if(id!==typing)return;
+      if(k>=lines.length){body.classList.remove('cursor');return;}
+      body.classList.add('cursor');body.innerHTML+=(k?'\n':'')+lines[k];k++;
+      var line=lines[k-1]||'';setTimeout(step,line.trim()===''?80:(line.indexOf('== ')>=0||line.indexOf('$ ')>=0?300:120));
+    })();
+  }
+
+  function go(n,instant){
+    if(n<0||n>=total||isNaN(n))return;
+    slides[i].classList.remove('active');
+    i=n;
+    if(instant){deck.style.transition='none';}
+    deck.style.transform='translateX(-'+(i*100)+'vw)';
+    if(instant){deck.offsetWidth;deck.style.transition='';}
+    var s=slides[i];
+    setTimeout(function(){s.classList.add('active');s.querySelectorAll('.tape[data-type]').forEach(function(t,j){if(j===0)playTape(t);else t.innerHTML=t.dataset.stamp+t.dataset.html;});},instant?0:200);
+    prev.classList.toggle('hidden',i===0);next.classList.toggle('hidden',i===total-1);
+    bar.style.width=((i+1)/total*100)+'%';counter.textContent=(i+1)+' / '+total;
+    if(history.replaceState)history.replaceState(null,'','#'+(i+1));
+    if(!moved&&n>0){moved=true;if(hint)hint.classList.add('gone');}
+  }
+  prev.onclick=function(){go(i-1)};next.onclick=function(){go(i+1)};
+  document.getElementById('home').onclick=function(){go(toc)};
+  document.querySelectorAll('[data-goto]').forEach(function(a){a.onclick=function(e){e.preventDefault();go(Array.prototype.indexOf.call(slides,document.getElementById(a.dataset.goto).closest('.slide')));};});
+  document.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'||e.key==='PageDown'||(e.key===' '&&!e.shiftKey)){e.preventDefault();go(i+1);}
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(i-1);}
+    else if(e.key==='Home'){e.preventDefault();go(toc);}
+    else if(e.key==='End'){e.preventDefault();go(total-1);}
+  });
+  var sx=null,sy=null;
+  document.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+  document.addEventListener('touchend',function(e){
+    if(sx===null)return;var dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;sx=null;
+    if(e.target.closest('pre,.tw,.tabs,.notes'))return;
+    if(Math.abs(dx)>60&&Math.abs(dx)>1.5*Math.abs(dy))go(dx<0?i+1:i-1);
+  });
+  var mx=null;
+  document.addEventListener('mousedown',function(e){if(e.target.closest('.nav,.home,a,pre,table,.tabs,.tape'))return;mx=e.clientX;});
+  document.addEventListener('mouseup',function(e){if(mx===null)return;var dx=e.clientX-mx;mx=null;if(Math.abs(dx)>80)go(dx<0?i+1:i-1);});
+  window.addEventListener('resize',function(){deck.style.transition='none';deck.style.transform='translateX(-'+(i*100)+'vw)';deck.offsetWidth;deck.style.transition='';});
+  var start=parseInt((location.hash||'').replace('#',''),10);
+  go(start>=1&&start<=total?start-1:0,true);
+  var m=location.search.match(/auto=(\d+)/);
+  if(m){setInterval(function(){if(i<total-1)go(i+1);},parseInt(m[1],10)*1000);}
+})();
+</script>
+</body>
+</html>

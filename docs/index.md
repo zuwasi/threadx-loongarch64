@@ -57,3 +57,4 @@ Deviation records, one per justified departure:
 | Release notes | [release-notes.md](release-notes.md) |
 | Approval package (open decisions) | [approval-package.md](approval-package.md) |
 | Review log | [reviews/review-log.md](reviews/review-log.md) |
+| Technical presentation | [presentation/index.html](presentation/index.html) (slide deck) |

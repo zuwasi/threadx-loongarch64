@@ -68,6 +68,7 @@ are never modified.
 | Verification | [Verification report](docs/verification/verification-report.md) - [regression results](docs/verification/regression.md) - [coverage](docs/verification/coverage.md) - [traceability](docs/safety/traceability.md) |
 | MISRA C:2025 | [Compliance summary](docs/misra/reports/guideline-compliance-summary.md) - [compliance dashboard](https://zuwasi.github.io/threadx-loongarch64/misra/reports/dashboard.html) - [kernel gap analysis](docs/misra/kernel-gap-analysis.md) |
 | Release decisions | [Approval package](docs/approval-package.md) - [review log](docs/reviews/review-log.md) |
+| Presentation | [Slide deck: the port, MISRA C:2025 and SIL 3 evidence in four days](https://zuwasi.github.io/threadx-loongarch64/presentation/) ([source](docs/presentation/index.html)) |
 
 ## License
 

@@ -30,6 +30,25 @@
     "stress": {"passed": 600, "total": 600, "before": "369/600 before PR-M5-001 fix"},
     "tool_validation": {"passed": 8, "total": 8}
   },
+  "coverage": {
+    "date": "2026-10-21",
+    "metric": "line",
+    "covered": 184,
+    "total": 200,
+    "scope": "port and BSP C translation units, root scope (bring-up tests and demo, 7/7 passed)",
+    "files": [
+      {"file": "bsp/qemu_virt/src/fatal.c", "covered": 11, "total": 11},
+      {"file": "bsp/qemu_virt/src/intr.c", "covered": 25, "total": 30},
+      {"file": "bsp/qemu_virt/src/power.c", "covered": 7, "total": 13},
+      {"file": "bsp/qemu_virt/src/timer.c", "covered": 23, "total": 23},
+      {"file": "bsp/qemu_virt/src/uart.c", "covered": 72, "total": 76},
+      {"file": "ports/loongarch64/gnu/libc/src/tx_la64_string.c", "covered": 30, "total": 30},
+      {"file": "ports/loongarch64/gnu/src/tx_timer_interrupt.c", "covered": 16, "total": 17}
+    ],
+    "method": "Parasoft cpptestcc instrumentation; coverage frames (CLOG) decoded from the QEMU UART; one report per build scope",
+    "gaps": "uncovered lines are defensive, failure-report, platform or measurement-limit paths, each justified in docs/verification/coverage.md",
+    "open": "statement, branch and MC/DC coverage (IEC 61508-3 Tables A.5/B.2), needs C/C++test CT/Professional or a second tool"
+  },
   "process": [
     {"title": "Plan", "text": "GEP, GRP (219 guidelines), deviation process"},
     {"title": "Tool setup", "text": "LoongArch compiler definition, project test configuration"},
