@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 Engineering Software Lab Israel (ESL)
+# SPDX-License-Identifier: MIT
 """Decode Parasoft CLOG frames emitted as ASCII hex on QEMU's UART."""
 
 from __future__ import annotations

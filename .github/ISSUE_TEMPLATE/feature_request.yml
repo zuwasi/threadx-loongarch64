@@ -1,0 +1,19 @@
+name: Feature request
+description: Suggest an improvement or a new target
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+  - type: textarea
+    id: safety
+    attributes:
+      label: Safety and MISRA impact
+      description: Requirements, tests or deviations this would touch, if known.

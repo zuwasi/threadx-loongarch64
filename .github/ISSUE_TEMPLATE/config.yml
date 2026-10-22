@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and discussion
+    url: https://github.com/zuwasi/threadx-loongarch64/discussions
+    about: Ask questions and discuss design ideas here.
+  - name: Security vulnerability
+    url: https://github.com/zuwasi/threadx-loongarch64/security/advisories/new
+    about: Report security issues privately.

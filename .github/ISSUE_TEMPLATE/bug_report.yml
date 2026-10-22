@@ -1,0 +1,42 @@
+name: Bug report
+description: Something in the port, BSP, tools or documentation is wrong
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Security issues must not be reported here; see SECURITY.md.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Commands, build type, test or regression configuration.
+      placeholder: |
+        tools/build.sh Debug
+        ctest --test-dir build/debug -R ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      placeholder: v1.0.0-rc1 or a commit SHA
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: Host OS, GCC and QEMU versions, or the hardware board if not QEMU.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      render: text

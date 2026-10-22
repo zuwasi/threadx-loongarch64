@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 Engineering Software Lab Israel (ESL)
+# SPDX-License-Identifier: MIT
 """Generate an uncommitted UART transport copy of Parasoft's runtime source.
 
 Parasoft's license prohibits redistributing its runtime source. This helper

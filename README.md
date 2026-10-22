@@ -70,7 +70,17 @@ are never modified.
 | Release decisions | [Approval package](docs/approval-package.md) - [review log](docs/reviews/review-log.md) |
 | Presentation | [Slide deck: the port, MISRA C:2025 and SIL 3 evidence in four days](https://zuwasi.github.io/threadx-loongarch64/presentation/) ([source](docs/presentation/index.html)) |
 
+## Contributing
+
+Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) first:
+commits need a DCO sign-off (`git commit -s`), and `external/threadx` is never
+modified. Use [issues](https://github.com/zuwasi/threadx-loongarch64/issues)
+for bugs, [Discussions](https://github.com/zuwasi/threadx-loongarch64/discussions)
+for questions, and [SECURITY.md](SECURITY.md) for vulnerabilities. This
+project follows the [Code of Conduct](CODE_OF_CONDUCT.md).
+
 ## License
 
 MIT. Copyright (c) 2026 Engineering Software Lab Israel (ESL).
-See [LICENSE](LICENSE). Eclipse ThreadX is licensed separately (MIT).
+See [LICENSE](LICENSE) and [NOTICE](NOTICE). Eclipse ThreadX is licensed
+separately (MIT).
