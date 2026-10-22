@@ -10,3 +10,4 @@
 
 # Local review credentials, never committed
 docs/qodo-review-credentials.md
+__pycache__/
