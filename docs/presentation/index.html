@@ -235,7 +235,7 @@ table.form td.hl{background:#f3e3b8;font-weight:600}
   <p class="footnote">The tabs at the top of every slide are this index; the Home button returns here.</p>
   <div class="toc">
     <a data-goto="esl"><em>01</em><b>Who are ESL</b><span>PX5 and RTOSX partner in Israel, ThreadX, ISO 26262 and MISRA experts</span></a>
-    <a data-goto="loongson"><em>02</em><b>The Loongson device</b><span>LoongArch, how it forked from MIPS, where it is used</span></a>
+    <a data-goto="loongson"><em>02</em><b>The Loongson device</b><span>LoongArch, its break with MIPS, where it is used</span></a>
     <a data-goto="standards"><em>03</em><b>Two decisions</b><span>Why the RISC-V64 port and not MIPS; why IEC 61508 SIL 3, and the ASIL mapping</span></a>
     <a data-goto="port"><em>04</em><b>The porting process</b><span><code>tx_port.h</code>, context frames, vector entry, why assembly matters, two real defects</span></a>
     <a data-goto="bsp"><em>05</em><b>BSP and QEMU validation</b><span>Startup, interrupt route, run harness, 576/576 regression, CI</span></a>
@@ -302,10 +302,10 @@ table.form td.hl{background:#f3e3b8;font-weight:600}
     <div class="tw"><table class="form">
       <thead><tr><th>Period</th><th>ISA</th><th>Typical parts</th><th>Notes</th></tr></thead>
       <tbody>
-        <tr class="row" style="transition-delay:.1s"><td>2001 to 2020</td><td>MIPS64-compatible plus Loongson extensions</td><td>Godson/Loongson 1, 2E/2F, 3A1000 to 3A4000 (GS464 cores)</td><td>Origin at the Institute of Computing Technology, Chinese Academy of Sciences</td></tr>
-        <tr class="row" style="transition-delay:.3s"><td>2020 to 2021</td><td><b>LoongArch</b> announced</td><td>3A5000 (LA464 core), 3C5000 server</td><td>Own ISA; MIPS binaries no longer run natively</td></tr>
-        <tr class="row" style="transition-delay:.5s"><td>2023 onward</td><td>LoongArch64 (LA64)</td><td>3A6000 (LA664), 2K-series SoCs (2K0500, 2K1000LA, 2K2000)</td><td>Desktop, server and embedded/industrial SoCs</td></tr>
-        <tr class="row" style="transition-delay:.7s"><td>Small MCUs</td><td>LoongArch32 (reduced)</td><td>1C-series controllers</td><td>Low-end control and IoT</td></tr>
+        <tr class="row" style="transition-delay:.1s"><td>2001 to 2020</td><td>MIPS32 in the 1-series embedded parts; MIPS64 with Loongson extensions in the 2/3-series</td><td>Godson-1, Loongson 1B/1C101, 2E/2F, 3A1000 to 3A4000 (GS464 cores)</td><td>Origin at the Institute of Computing Technology, Chinese Academy of Sciences</td></tr>
+        <tr class="row" style="transition-delay:.3s"><td>2020 to 2021</td><td><b>LoongArch</b>: announced 2020, shipped 2021</td><td>3A5000 (LA464 core), 3C5000 server</td><td>Own ISA, not a MIPS fork; MIPS binaries no longer run natively</td></tr>
+        <tr class="row" style="transition-delay:.5s"><td>2022 onward</td><td>LoongArch64 (LA64)</td><td>3A6000 (LA664), 2K-series SoCs (2K0500, 2K1000LA, 2K2000)</td><td>Desktop, server and embedded/industrial SoCs</td></tr>
+        <tr class="row" style="transition-delay:.7s"><td>Small MCUs</td><td>1C101 still MIPS32; newer 1C102/1C103 use the LA132 (LoongArch32) core</td><td>1C-series controllers</td><td>Low-end control and IoT</td></tr>
       </tbody>
     </table></div>
     <div class="notes">
@@ -319,9 +319,9 @@ table.form td.hl{background:#f3e3b8;font-weight:600}
 
 <!-- 7 LoongArch vs MIPS -->
 <section class="slide" data-sec="Loongson"><div class="page">
-  <div class="filehead"><span>Exhibit <b>L-2</b> &nbsp;|&nbsp; the fork from MIPS</span><span class="tabs"></span></div>
+  <div class="filehead"><span>Exhibit <b>L-2</b> &nbsp;|&nbsp; the break from MIPS</span><span class="tabs"></span></div>
   <div class="movehead"><div class="roundstamp"><div><small>SLIDE</small><b></b></div></div><h2>LoongArch looks like MIPS and is not MIPS</h2></div>
-  <p class="sub" style="max-width:none">Loongson kept the RISC philosophy and the 32-register load/store model, then redesigned everything a kernel porter touches. A MIPS port would not even assemble.</p>
+  <p class="sub" style="max-width:none">LoongArch borrows classic RISC idioms and even some MIPS-like semantics, but every instruction is re-encoded and the two ISAs cannot interoperate. A MIPS port would not even assemble.</p>
   <div class="tw"><table class="form tight">
     <thead><tr><th>Concern</th><th>Classic MIPS64</th><th>LoongArch64</th><th>Impact on the ThreadX port</th></tr></thead>
     <tbody>
@@ -395,7 +395,7 @@ v6.5.2.202603_rel
 <span class="g">risc-v32</span>
 <span class="g">risc-v64</span>
 <span class="g">risc-v_common</span>
-<span class="m"># no MIPS port in the open-source tree</span>
+<span class="m"># no MIPS port under ports/ - only SMP Interaptiv (MIPS32) under ports_smp/</span>
 <span class="p">$ </span>head -6 ports/loongarch64/gnu/inc/tx_port.h
  * Copyright (c) 2026 Engineering Software Lab Israel (ESL)
  *
@@ -416,7 +416,7 @@ v6.5.2.202603_rel
     </table></div>
   </div>
   <div class="list">
-    <div><span><b>Availability:</b> the open-source tree has no MIPS port to start from, and MIPS would be the wrong model anyway: CP0, delay slots and <code>eret</code> do not exist on LoongArch.</span></div>
+    <div><span><b>Availability:</b> <code>ports/</code> has no MIPS port to start from; the only MIPS code in the tree is the SMP Interaptiv MIPS32 port under <code>ports_smp/</code>. MIPS would be the wrong model anyway: CP0, delay slots and <code>eret</code> do not exist on LoongArch.</span></div>
     <div><span><b>Shape:</b> RISC-V64 is a maintained 64-bit port with the same LP64 kernel data model, 32 GPRs, a CSR-based trap model and a similar callee-saved split. The structure maps one-to-one; only instruction encodings and CSR semantics change.</span></div>
   </div>
 </div></section>
