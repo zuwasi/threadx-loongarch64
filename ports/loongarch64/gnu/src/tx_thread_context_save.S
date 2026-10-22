@@ -6,7 +6,7 @@
 #include "tx_port.h"
 #include "tx_la64_context.inc"
 
-/* LA-REQ-003, LA-REQ-009, LA-REQ-012, LA-REQ-103, LA-REQ-106. */
+/* LA-REQ-003, LA-REQ-009, LA-REQ-012, LA-REQ-103, LA-REQ-105, LA-REQ-106. */
     .section .text.trap.port, "ax"
     .balign 4096
     .globl  _tx_thread_vector_entry
@@ -28,18 +28,30 @@ _tx_thread_vector_entry:
     li.w    $r12, TX_LA64_CONTEXT_INTERRUPT_TYPE
     st.d    $r12, $sp, 0
 
-    /* Only the enabled timer interrupt is handled by this port.  Other
-       exceptions, including unexpected interrupt sources, are fatal. */
+    /* The enabled timer interrupt (ESTAT.IS[11]) and the external I/O
+       interrupt line routed by the BSP (ESTAT.IS[2], LA-REQ-105) are
+       handled.  Other exceptions, including unexpected interrupt
+       sources, are fatal. */
     csrrd   $r12, TX_LA64_CSR_ESTAT
     srli.d  $r13, $r12, 16
     andi    $r13, $r13, 0x3F
     bnez    $r13, _tx_thread_vector_fatal
+    andi    $r13, $r12, 0x4
+    bnez    $r13, _tx_thread_vector_external
     andi    $r13, $r12, 0x800
     beqz    $r13, _tx_thread_vector_fatal
 
     bl      bsp_timer_ack
     bl      _tx_thread_context_save
     bl      _tx_timer_interrupt
+    b       _tx_thread_context_restore
+
+    /* External I/O interrupt: same ThreadX context protocol as the timer
+       tick.  Hardware cleared CRMD.IE on entry, so the handler runs with
+       interrupts disabled (LA-REQ-009).  */
+_tx_thread_vector_external:
+    bl      _tx_thread_context_save
+    bl      bsp_external_irq_handler
     b       _tx_thread_context_restore
 
 _tx_thread_vector_fatal:

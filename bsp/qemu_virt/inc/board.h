@@ -25,5 +25,27 @@
 
 /* CPU interrupt lines (ECFG.LIE / ESTAT.IS bit numbers).  */
 #define BSP_IRQ_LINE_TIMER              11U
+#define BSP_IRQ_LINE_EXTERNAL           2U
+
+/* PCH-PIC (LS7A1000-compatible I/O interrupt controller), normal MMIO.
+   Offsets verified against QEMU 8.2.2 hw/intc/loongarch_pch_pic.c.  A set
+   INT_MASK bit masks the line; the reset value masks every line.  */
+#define BSP_PCH_PIC_BASE                0x10000000UL
+#define BSP_PCH_PIC_REG_INT_MASK        0x20UL
+#define BSP_PCH_PIC_REG_HTMSI_VEC       0x200UL
+
+/* UART interrupt line at the PCH-PIC.  QEMU 8.2.2 hw/loongarch/virt.c
+   wires the ns16550 to pch_pic input VIRT_UART_IRQ - VIRT_GSI_BASE = 2.  */
+#define BSP_UART_PCH_IRQ                2U
+
+/* EXTIOI (3A5000 external interrupt controller), in IOCSR space.  Offsets
+   are relative to BSP_EXTIOI_IOCSR_BASE and match QEMU 8.2.2
+   hw/intc/loongarch_extioi.c.  Input 2 reaches CPU line
+   BSP_IRQ_LINE_EXTERNAL through IP0.  */
+#define BSP_EXTIOI_IOCSR_BASE           0x1400UL
+#define BSP_EXTIOI_REG_IPMAP            0x0C0UL
+#define BSP_EXTIOI_REG_ENABLE           0x200UL
+#define BSP_EXTIOI_REG_COREISR          0x400UL
+#define BSP_EXTIOI_REG_COREMAP          0x800UL
 
 #endif /* BSP_BOARD_H */

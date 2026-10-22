@@ -7,6 +7,7 @@ add_library(bsp_qemu_virt STATIC
     src/startup.S
     src/bsp_cpu.S
     src/uart.c
+    src/intr.c
     src/timer.c
     src/power.c
     src/fatal.c

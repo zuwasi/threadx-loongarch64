@@ -106,13 +106,18 @@ A change to a released element repeats the affected verification steps.
 | Software Safety Requirements Specification | `docs/safety/requirements.md` | r1 |
 | Tool classification | `docs/safety/tools.md` | r1 |
 | Verification plan | `docs/safety/verification.md` | r1 |
-| Design description | `docs/safety/design.md` | M2-M3 |
+| Design description | `docs/safety/design.md` | r1, 2026-10-22 |
 | MISRA Guideline Enforcement Plan | `docs/misra/gep.md` | r1 |
 | MISRA Re-categorization Plan | `docs/misra/grp.md` | r1 |
 | Deviation records | `docs/misra/deviations/` | Ongoing |
-| Compiler behaviour (Dir 1.1) | `docs/safety/compiler-behaviour.md` | M5 |
-| Traceability matrix | `docs/safety/traceability.md` | M8 |
-| Safety manual | `docs/safety/safety-manual.md` | M8 |
+| Compiler behaviour (Dir 1.1) | `docs/safety/compiler-behaviour.md` | r1, 2026-10-22 |
+| Traceability matrix | `docs/safety/traceability.md` | r1, 2026-10-22 (generated) |
+| Safety manual | `docs/safety/safety-manual.md` | r1, 2026-10-22 |
+| Regression results | `docs/verification/regression.md` | r3, 2026-10-22 |
+| Coverage report | `docs/verification/coverage.md` | r1, 2026-10-22 |
+| Verification report | `docs/verification/verification-report.md` | r1, 2026-10-22 |
+| Review log | `docs/reviews/review-log.md` | r1, 2026-10-22 |
+| Release notes | `docs/release-notes.md` | 1.0.0-rc1 |
 
 ## 8. Approval
 

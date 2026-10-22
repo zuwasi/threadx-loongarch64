@@ -36,6 +36,15 @@ _start:
     addi.d  $t0, $t0, 8
     b       1b
 2:
+    /* Fill the guard below the system stack after .bss is cleared.  */
+    la.abs  $t0, __system_stack_guard_start
+    la.abs  $t1, __system_stack_guard_end
+    li.d    $t2, 0x5AA55AA55AA55AA5
+3:  bgeu    $t0, $t1, 4f
+    st.d    $t2, $t0, 0
+    addi.d  $t0, $t0, 8
+    b       3b
+4:
     /* Enable the FPU (EUEN.FPE) and clear FCSR0.  */
     li.w    $t0, 0x1
     csrxchg $t0, $t0, CSR_EUEN
@@ -45,11 +54,16 @@ _start:
     la.abs  $t0, bsp_default_trap
     csrwr   $t0, CSR_EENTRY
 
+#ifdef CPPTEST_COVERAGE
+    /* Initialise Parasoft's freestanding coverage runtime before main.  */
+    bl      CppTest_InitializeRuntime
+#endif
+
     bl      main
 
     /* main must not return.  */
     bl      bsp_poweroff
-3:  b       3b
+5:  b       5b
     .size   _start, . - _start
 
 /* Default exception entry.  EENTRY requires 4 KiB alignment.  */
@@ -63,5 +77,5 @@ bsp_default_trap:
     csrrd   $a2, CSR_BADV
     la.abs  $sp, __system_stack_top
     bl      bsp_fatal_exception
-4:  b       4b
+6:  b       6b
     .size   bsp_default_trap, . - bsp_default_trap

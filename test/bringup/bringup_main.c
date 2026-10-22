@@ -5,7 +5,7 @@
 
 /*  M2 bring-up test: console, timer interrupt, interrupt posture control.
 
-    Verifies: LA-REQ-002, LA-REQ-101, LA-REQ-102, LA-REQ-103, LA-REQ-104,
+    Verifies: LA-REQ-001, LA-REQ-002, LA-REQ-101, LA-REQ-102, LA-REQ-103, LA-REQ-104,
               LA-REQ-107  */
 
 #include "bsp.h"
@@ -31,7 +31,7 @@ void bringup_trap_handler(uint64_t estat)
     }
 }
 
-static bool check(bool condition, const char *name)
+static bool main_check(bool condition, const char *name)
 {
     bsp_uart_puts(condition ? "  PASS  " : "  FAIL  ");
     bsp_uart_puts(name);
@@ -51,17 +51,21 @@ int main(void) /* parasoft-suppress MISRAC2025-RULE_8_6-a "separate freestanding
 
     bsp_exception_entry_set(&bringup_trap_entry);
 
-    ok = check(bsp_timer_init(BSP_TICKS_PER_SECOND_DEFAULT), "timer init") && ok;
-    ok = check(bsp_timer_frequency() == 100000000ULL, "timer frequency 100 MHz") && ok;
+    ok = main_check((sizeof(LONG) == 4U) && (sizeof(ULONG) == 4U) &&
+                    (sizeof(ULONG64) == 8U) && (sizeof(ALIGN_TYPE) == 8U) &&
+                    (sizeof(VOID *) == 8U),
+                    "ThreadX data model (LONG/ULONG 32-bit, LP64)") && ok;
+    ok = main_check(bsp_timer_init(BSP_TICKS_PER_SECOND_DEFAULT), "timer init") && ok;
+    ok = main_check(bsp_timer_frequency() == 100000000ULL, "timer frequency 100 MHz") && ok;
 
     posture = _tx_thread_interrupt_control(TX_INT_DISABLE);
-    ok = check((posture == TX_INT_DISABLE) &&
+    ok = main_check((posture == TX_INT_DISABLE) &&
                ((bsp_crmd_read() & 0x4U) == 0U),
                "disable clears CRMD.IE and returns old posture") && ok;
 
     bsp_irq_line_enable(line_mask << BSP_IRQ_LINE_TIMER);
     posture = _tx_thread_interrupt_control(TX_INT_ENABLE);
-    ok = check((posture == TX_INT_DISABLE) &&
+    ok = main_check((posture == TX_INT_DISABLE) &&
                ((bsp_crmd_read() & 0x4U) != 0U),
                "enable sets CRMD.IE and returns old posture") && ok;
 
@@ -70,18 +74,18 @@ int main(void) /* parasoft-suppress MISRAC2025-RULE_8_6-a "separate freestanding
         bsp_cpu_idle();
         guard++;
     }
-    ok = check(bringup_timer_ticks >= TEST_TICKS, "timer interrupts delivered") && ok;
+    ok = main_check(bringup_timer_ticks >= TEST_TICKS, "timer interrupts delivered") && ok;
 
     posture = _tx_thread_interrupt_control(TX_INT_DISABLE);
-    ok = check((posture == TX_INT_ENABLE) &&
+    ok = main_check((posture == TX_INT_ENABLE) &&
                ((bsp_crmd_read() & 0x4U) == 0U),
                "disable clears CRMD.IE and returns old posture") && ok;
 
     bsp_irq_line_disable(line_mask << BSP_IRQ_LINE_TIMER);
-    ok = check((bsp_ecfg_read() & ((uint64_t) line_mask << BSP_IRQ_LINE_TIMER)) == 0U,
+    ok = main_check((bsp_ecfg_read() & ((uint64_t) line_mask << BSP_IRQ_LINE_TIMER)) == 0U,
                "line disable clears ECFG.LIE") && ok;
     bsp_irq_line_enable(line_mask << BSP_IRQ_LINE_TIMER);
-    ok = check((bsp_ecfg_read() & ((uint64_t) line_mask << BSP_IRQ_LINE_TIMER)) != 0U,
+    ok = main_check((bsp_ecfg_read() & ((uint64_t) line_mask << BSP_IRQ_LINE_TIMER)) != 0U,
                "line enable sets ECFG.LIE") && ok;
 
     bsp_uart_puts("ticks=");

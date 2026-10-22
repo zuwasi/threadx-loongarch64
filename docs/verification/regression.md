@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Document ID | ESL-TXLA64-REG |
-| Revision | r1, 2026-10-20 |
+| Revision | r3, 2026-10-22 |
 | Verification plan | `docs/safety/verification.md`, "Integration tests" |
 
 ## 1. Harness
@@ -59,6 +59,29 @@ Baseline: working tree after M3, before the M4 commit.
 
 The root project's bring-up and demo tests (3 tests) pass in Debug and Release
 on the same baseline.
+
+### Re-run after the LA-REQ-105 external interrupt change (r2, 2026-10-21)
+
+The port exception entry was extended to dispatch ESTAT.IS[2], the UART
+receive interrupt routed by the BSP through the PCH-PIC and EXTIOI
+controllers (LA-REQ-105). The regression suite re-run on that working tree
+passes 96/96 in all six configurations (576/576). The root project's tests
+now number seven (six bring-up images, including `bringup_uart_rx_interrupts`,
+plus the demo) and pass 7/7 in Debug and Release.
+
+### Re-run for the 1.0.0-rc1 release candidate (r3, 2026-10-22)
+
+Every result was re-verified on the exact tree tagged `v1.0.0-rc1`
+(GCC 14.2.0, QEMU 8.2.2): the regression suite passes 96/96 in all six
+configurations (576/576) and the root tests pass 7/7 in Debug and
+Release. The MISRA C:2025 tests-scope scan was repeated on the same tree
+with no change (0 findings in port, BSP, bring-up and demo code).
+
+One observation: a first regression run started while a full Parasoft
+analysis occupied all 24 host cores showed one timing flake
+(`default::threadx_timer_multiple_accuracy_test`); that test passes in
+isolation and the whole suite passes on the re-run with an idle host.
+The regression suite must be run on an unloaded host.
 
 ## 3. Defects found
 

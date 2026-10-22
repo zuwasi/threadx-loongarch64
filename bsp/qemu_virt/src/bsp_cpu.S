@@ -9,7 +9,7 @@
     (MISRA C:2025 Dir 4.3).  LoongArch CSR numbers are immediates, so each
     register needs its own function.
 
-    Requirements: LA-REQ-102, LA-REQ-103, LA-REQ-106  */
+    Requirements: LA-REQ-102, LA-REQ-103, LA-REQ-105, LA-REQ-106  */
 
 #define CSR_EUEN    0x2
 #define CSR_CRMD    0x0
@@ -122,6 +122,23 @@ bsp_cpu_halt:
     b       1b
     .size   bsp_cpu_halt, . - bsp_cpu_halt
 
+/* bool bsp_stack_guard_check(void): verify the linker-reserved sentinel.  */
+    .globl  bsp_stack_guard_check
+    .type   bsp_stack_guard_check, @function
+bsp_stack_guard_check:
+    la.abs  $t0, __system_stack_guard_start
+    la.abs  $t1, __system_stack_guard_end
+    li.d    $t2, 0x5AA55AA55AA55AA5
+    li.w    $a0, 1
+2:  bgeu    $t0, $t1, 3f
+    ld.d    $t3, $t0, 0
+    bne     $t2, $t3, 4f
+    addi.d  $t0, $t0, 8
+    b       2b
+4:  move    $a0, $zero
+3:  jr      $ra
+    .size   bsp_stack_guard_check, . - bsp_stack_guard_check
+
 /* void bsp_exception_entry_set(void (*entry)(void)): EENTRY, 4 KiB aligned  */
     .globl  bsp_exception_entry_set
     .type   bsp_exception_entry_set, @function
@@ -129,3 +146,19 @@ bsp_exception_entry_set:
     csrwr   $a0, 0xc
     jr      $ra
     .size   bsp_exception_entry_set, . - bsp_exception_entry_set
+
+/* uint32_t bsp_iocsr_read32(uint32_t addr): read a 32-bit IOCSR register  */
+    .globl  bsp_iocsr_read32
+    .type   bsp_iocsr_read32, @function
+bsp_iocsr_read32:
+    iocsrrd.w $a0, $a0
+    jr      $ra
+    .size   bsp_iocsr_read32, . - bsp_iocsr_read32
+
+/* void bsp_iocsr_write32(uint32_t addr, uint32_t value)  */
+    .globl  bsp_iocsr_write32
+    .type   bsp_iocsr_write32, @function
+bsp_iocsr_write32:
+    iocsrwr.w $a1, $a0
+    jr      $ra
+    .size   bsp_iocsr_write32, . - bsp_iocsr_write32

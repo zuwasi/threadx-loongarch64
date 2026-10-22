@@ -10,6 +10,7 @@ OUTPUT_ARCH(loongarch)
 ENTRY(_start)
 
 __system_stack_size = 0x4000;
+__system_stack_guard_size = 0x100;
 
 MEMORY
 {
@@ -50,6 +51,15 @@ SECTIONS
         *(COMMON)
         . = ALIGN(8);
         __bss_end = .;
+    } > RAM :data
+
+    /* A sentinel region below the downward-growing system stack detects
+       stack overflow before it reaches .bss.  */
+    .stack_guard (NOLOAD) : ALIGN(16)
+    {
+        __system_stack_guard_start = .;
+        . += __system_stack_guard_size;
+        __system_stack_guard_end = .;
     } > RAM :data
 
     .stack (NOLOAD) : ALIGN(16)

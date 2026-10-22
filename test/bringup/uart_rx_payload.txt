@@ -1,0 +1,1 @@
+ThreadX-LoongArch64 UART RX interrupt route payload 0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ

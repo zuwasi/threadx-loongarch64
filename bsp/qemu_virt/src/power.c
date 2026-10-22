@@ -9,8 +9,16 @@
 
 #include "bsp.h"
 
+#ifdef CPPTEST_COVERAGE
+#include "cpptest/cpptest.h"
+#endif
+
 void bsp_poweroff(void)
 {
+#ifdef CPPTEST_COVERAGE
+    CppTest_FinalizeRuntime();
+#endif
+
     volatile uint8_t *sleep_ctl = (volatile uint8_t *) BSP_GED_SLEEP_CTL_ADDR; /* parasoft-suppress MISRAC2025-RULE_11_4-b "DEV-007" */
 
     *sleep_ctl = (uint8_t) BSP_GED_SLEEP_CTL_POWEROFF;
@@ -21,7 +29,16 @@ void bsp_poweroff(void)
 
 void bsp_test_report(bool passed) /* parasoft-suppress MISRAC2025-RULE_8_7-a "DEV-011" */
 {
-    if (passed)
+    bool stack_guard_ok = bsp_stack_guard_check();
+    bool ok = passed;
+
+    if (!stack_guard_ok)
+    {
+        bsp_uart_puts("System stack guard damaged\n");
+        ok = false;
+    }
+
+    if (ok)
     {
         bsp_uart_puts("\n*** TEST PASSED ***\n");
     }

@@ -12,7 +12,7 @@
 | MISRA C:2025 analysis | Parasoft C/C++test | All port and BSP C code | No Mandatory violation; every other violation covered by an approved deviation or the GRP |
 | Flow analysis | Parasoft BD-* checkers | All port and BSP C code | No unjustified finding |
 | Unit tests | Host-independent tests run on QEMU | LA-REQ-001, 010, BSP drivers | All pass |
-| Structural coverage | gcov / Parasoft coverage | Port and BSP C code | 100% statement and branch, MC/DC for multi-condition decisions, or justified gaps |
+| Structural coverage | Parasoft coverage (`tools/parasoft/coverage.sh`) | Port and BSP C code | 1.0.0-rc1: line coverage with justified gaps; statement, branch and MC/DC are an open item before assessment (see `docs/verification/coverage.md`) |
 | Integration tests | ThreadX regression suite on QEMU | LA-REQ-002 to 009, 011, 012, 101 to 107 | 100% pass in all six upstream configurations (`default`, `optimized`, `disable_notify_callbacks`, `stack_checking`, `stack_checking_rand_fill`, `trace`); see `docs/verification/regression.md` |
 | Code review | Checklist, independent reviewer | All source, including assembly | All findings closed |
 | Design review | Independent reviewer | `design.md` | All findings closed |

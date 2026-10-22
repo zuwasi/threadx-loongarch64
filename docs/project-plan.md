@@ -138,6 +138,12 @@ hand.
 | M7 | Kernel gap analysis | MISRA C:2025 report on ThreadX common code |
 | M8 | Release 1.0 | Safety manual, traceability, release notes, tag `v1.0.0` |
 
+Status (2026-10-22): M0 to M7 are complete. M8 is delivered as release
+candidate 1.0.0-rc1 (pre-release tag `v1.0.0-rc1`): every planned work
+product exists and all automated verification passes. The human approvals
+and independent reviews listed in [approval-package.md](approval-package.md)
+are still open, so a final `v1.0.0` release is not claimed yet.
+
 ## 9. Continuous integration
 
 GitHub Actions on Ubuntu 24.04: install GCC 14 for LoongArch and QEMU, build

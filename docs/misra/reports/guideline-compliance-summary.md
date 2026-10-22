@@ -7,7 +7,7 @@
 | Scope | `ports/loongarch64/` and `bsp/` C sources and headers (GEP section 2) |
 | Analysis | Parasoft C/C++test Standard 2026.1.3, configuration under version control (`tools/parasoft/ESL_MISRA_C_2025.properties`) |
 | Report | [product/report.sarif](product/report.sarif), [product/report.html](product/report.html) |
-| Baseline | M5 working tree; the commit is recorded here when the baseline is committed |
+| Baseline | Release candidate 1.0.0-rc1 (tag `v1.0.0-rc1`) |
 
 ## 1. Result for the compliance scope
 

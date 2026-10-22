@@ -62,7 +62,7 @@ else
 
     cat > "${out}/build_tests.sh" <<EOF
 set -euo pipefail
-cmake --build "${out}/build" --target bringup_test bringup_fatal_test threadx_demo
+cmake --build "${out}/build" --target bringup_test bringup_fatal_test bringup_memory_test bringup_long_idle_test bringup_relinquish_test bringup_uart_rx_test threadx_demo
 cmake --build "${out}/regression"
 EOF
 

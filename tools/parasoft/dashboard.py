@@ -90,7 +90,7 @@ tests = json.load(open(R + "tests/report.sarif", encoding="utf-8"))["runs"][0].g
 
 data = json.load(open(R + "history.json", encoding="utf-8"))
 data.update({
-    "generated": "2026-10-21",
+    "generated": "2026-10-22",
     "tool": "Parasoft C/C++test Standard 2026.1.3",
     "compiler": "GCC 14.2.0 loongarch64-linux-gnu",
     "guidelines_total": len(grp),
